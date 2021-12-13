@@ -1,3 +1,7 @@
 {
-    "Version": "4.0.0"
+  "image": "",
+  "display_language": "",
+  "accuracy": 0.7,
+  "detection_delay": 0.3,
+  "throwing_delay": 0.5
 }

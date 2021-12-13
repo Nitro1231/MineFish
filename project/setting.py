@@ -14,3 +14,14 @@
 # you may not use this file except in compliance with the License.
 
 import json
+
+
+class Setting():
+    def __init__(self) -> None:
+        pass
+
+    def read_file(path: str) -> None:
+        pass
+
+    def write_file(path: str) -> None:
+        pass

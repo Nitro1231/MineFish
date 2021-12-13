@@ -13,11 +13,14 @@
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
 
-
 import cv2
 import numpy as np
 import pyautogui
 import imutils
+
+
+class WindowTooSmallError(Exception):
+    pass
 
 
 class ImageDetection():
@@ -40,7 +43,7 @@ class ImageDetection():
         min_h = target_h * self._min_scale
 
         if image_w < min_w or image_h < min_h:
-            raise ValueError
+            raise WindowTooSmallError()
 
         for scale in np.linspace(self._min_scale, self._max_scale, 30)[::-1]:
             # Resizing
@@ -58,7 +61,7 @@ class ImageDetection():
                 for pt in zip(*loc[::-1]):
                     # Draw a rectangle on the detected area.
                     cv2.rectangle(
-                        org_image, pt, 
+                        org_image, pt,
                         (pt[0] + target_w, pt[1] + target_h),
                         (0, 0, 255), 2
                     )

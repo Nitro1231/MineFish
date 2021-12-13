@@ -13,15 +13,14 @@
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
 
-
-import config
+import setting
 import image_detection
 import window_manager
+
 
 class MineFish():
     def __init__(self) -> None:
         pass
-
 
     def get_capture_points(x, y, width, height) -> tuple(tuple()):
         p1 = (x + int(width/2), y + int(height/3))

@@ -16,26 +16,73 @@
 import pygetwindow
 
 
-def get_window_by_filter(filter: dict()) -> 'Win32Window' or None:
-    windows = pygetwindow.getAllTitles()
+def get_matched_window(match_list: dict()) -> 'Win32Window' or None:
+    '''
+    Grab all windows and find the window that is matched with the given 
+    condition. Return the 'Win32Window' object if the window is matched 
+    with the condition; return 'None' otherwise.
 
-    include = False
-    exclude = True
-    for title in windows:
-        for text in filter['include']:
-            if text in title:
-                include = True
-                break
-        for text in filter['exclude']:
-            if text in title:
-                include = False
-                break
-        if include and exclude:
-            return pygetwindow.getWindowsWithTitle(title)[0]
+    Parameters:
+         • match_list: The dictionary that includes lists named 
+         'include' and 'exclude' that indicates words that should be filtered.
+    '''
+
+    windows = pygetwindow.getAllWindows()
+
+    for window in windows:
+        if match_text(window.title, match_list):
+            return window
     return None
 
 
+def match_text(text: str, match_list: dict()) -> bool:
+    '''
+    Match the text with a given condition and return a boolean value 
+    that indicates whether they are matched.
+
+    Parameters:
+         • text: The target text.
+         • match_list: The dictionary that includes lists named 
+         'include' and 'exclude' that indicates words that should be filtered.
+    '''
+
+    include = False
+    exclude = True
+
+    for word in match_list['include']:
+        if word in text:
+            include = True
+            break
+
+    for word in match_list['exclude']:
+        if word in text:
+            print(text, word)
+            exclude = False
+            break
+
+    return include and exclude
+
+
 def get_window_size(handle: 'Win32Window') -> tuple():
-    x1, y1, x2, y2 = handle._getWindowRect()
+    '''
+    Get and return the window's left, top, width, and height.
+
+    Parameters:
+         • handle: The 'Win32Window' object.
+    '''
+
+    left, top = handle.left, handle.top
     width, height = handle.width, handle.height
-    return x1, y1, x2, y2, width, height
+    return left, top, width, height
+
+
+# TEST:
+# match = {
+#     'include': ['Minecraft'],
+#     'exclude': ['Launcher']
+# }
+
+# window = get_matched_window(match)
+
+# print(window)
+# print(get_window_size(window))
