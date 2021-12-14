@@ -56,7 +56,6 @@ def match_text(text: str, match_list: dict()) -> bool:
 
     for word in match_list['exclude']:
         if word in text:
-            print(text, word)
             exclude = False
             break
 

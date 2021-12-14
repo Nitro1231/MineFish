@@ -24,10 +24,11 @@ class WindowTooSmallError(Exception):
 
 
 class ImageDetection():
-    def __init__(self, target_path: str, accuracy: float, min_scale: float, max_scale: float) -> None:
+    def __init__(self, target_path: str, accuracy: float, frequency: int, min_scale: float, max_scale: float) -> None:
         target_image = cv2.imread(target_path)
         self._target = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
         self._accuracy = accuracy
+        self._frequency = frequency
         self._min_scale = min_scale
         self._max_scale = max_scale
 
@@ -45,7 +46,7 @@ class ImageDetection():
         if image_w < min_w or image_h < min_h:
             raise WindowTooSmallError()
 
-        for scale in np.linspace(self._min_scale, self._max_scale, 30)[::-1]:
+        for scale in np.linspace(self._min_scale, self._max_scale, self._frequency)[::-1]:
             # Resizing
             target = imutils.resize(
                 image=self._target,
