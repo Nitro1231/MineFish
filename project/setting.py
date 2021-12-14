@@ -17,11 +17,20 @@ import json
 
 
 class Setting():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, setting_path) -> None:
+        self.setting_path = setting_path
+        self.setting = self.load_setting(setting_path)
 
-    def read_file(path: str) -> None:
-        pass
+    def load_setting(self, path: str) -> None:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
 
-    def write_file(path: str) -> None:
-        pass
+    def save_setting(self, path: str) -> None:
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(self.setting, f, indent='\t')
+
+# TEST:
+# s = Setting()
+# s.setting['image'] = 'kr'
+# s.save_setting(SETTING_PATH)
+# print(s.setting)
