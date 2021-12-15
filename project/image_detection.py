@@ -32,6 +32,11 @@ class ImageDetection():
         self._min_scale = min_scale
         self._max_scale = max_scale
 
+    def get_capture_points(self, left: int, top: int, width: int, height: int) -> tuple(tuple()):
+        p1 = (left + int(width/2), top + int(height/3))
+        p2 = (int(width/2), int(height/3*2))
+        return p1, p2
+
     def capture_area(self, p1: tuple, p2: tuple) -> tuple():
         org_image = np.array(pyautogui.screenshot(region=p1+p2))
         gray_image = cv2.cvtColor(org_image, cv2.COLOR_BGR2GRAY)

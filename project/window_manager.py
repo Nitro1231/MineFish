@@ -69,7 +69,8 @@ def get_window_size(handle: 'Win32Window') -> tuple():
     Parameters:
          • handle: The 'Win32Window' object.
     '''
-
+    
+    #pygetwindow.PyGetWindowException
     left, top = handle.left, handle.top
     width, height = handle.width, handle.height
     return left, top, width, height
