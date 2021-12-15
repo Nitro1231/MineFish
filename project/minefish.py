@@ -13,7 +13,11 @@
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
 
+
+# https://wikidocs.net/128689
+
 import os
+import cv2
 import sys
 import setting
 import image_detection
@@ -23,9 +27,9 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QTabWidget, QVBoxLayout, QPushButton, QGridLayout, QCheckBox
 
 SETTING_PATH = './setting.json'
-FREQUENCY = 25
-MIN_SCALE = 0.7
-MAX_SCALE = 1.2
+FREQUENCY = 40
+MIN_SCALE = 0.5
+MAX_SCALE = 2.0
 WIDTH = 600
 HEIGHT = 400
 MATCH = {
@@ -131,7 +135,9 @@ class MineFish(QWidget):
         self.capture_image.setPixmap(self.to_pixmap(org_image))
 
     def to_pixmap(self, image):
-        qimg = QImage(image.data, image.shape[1], image.shape[0], QImage.Format_RGB888)
+        height, width, channel = image.shape
+        bytesPerLine = 3 * width
+        qimg = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
         return QPixmap.fromImage(qimg)
 
 

@@ -33,8 +33,8 @@ class ImageDetection():
         self._max_scale = max_scale
 
     def get_capture_points(self, left: int, top: int, width: int, height: int) -> tuple(tuple()):
-        p1 = (left + int(width/2), top + int(height/3))
-        p2 = (int(width/2), int(height/3*2))
+        p1 = (left + int(width/2), top + int(height/5*3))
+        p2 = (int(width/2), int(height/5*2))
         return p1, p2
 
     def capture_area(self, p1: tuple, p2: tuple) -> tuple():
@@ -51,7 +51,7 @@ class ImageDetection():
         if image_w < min_w or image_h < min_h:
             raise WindowTooSmallError()
 
-        for scale in np.linspace(self._min_scale, self._max_scale, self._frequency)[::-1]:
+        for scale in np.linspace(self._min_scale, self._max_scale, self._frequency):
             # Resizing
             target = imutils.resize(
                 image=self._target,
@@ -59,17 +59,20 @@ class ImageDetection():
             )
             target_w, target_h = target.shape[::-1]
 
-            res = cv2.matchTemplate(gray_image, target, cv2.TM_CCOEFF_NORMED)
+            try:
+                res = cv2.matchTemplate(gray_image, target, cv2.TM_CCOEFF_NORMED)
 
-            loc = np.where(res >= self._accuracy)
-            if len(list(zip(*loc[::-1]))) > 0:
-                # Image detected.
-                for pt in zip(*loc[::-1]):
-                    # Draw a rectangle on the detected area.
-                    cv2.rectangle(
-                        org_image, pt,
-                        (pt[0] + target_w, pt[1] + target_h),
-                        (0, 0, 255), 2
-                    )
-                    return True, org_image
+                loc = np.where(res >= self._accuracy)
+                if len(list(zip(*loc[::-1]))) > 0:
+                    # Image detected.
+                    for pt in zip(*loc[::-1]):
+                        # Draw a rectangle on the detected area.
+                        cv2.rectangle(
+                            org_image, pt,
+                            (pt[0] + target_w, pt[1] + target_h),
+                            (196, 229, 56), 2
+                        )
+                        return True, org_image
+            except:
+                break
         return False, org_image
