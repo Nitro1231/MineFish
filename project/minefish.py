@@ -13,8 +13,7 @@
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
 
-
-# https://wikidocs.net/128689
+# https://wikidocs.net/21849
 
 import os
 import cv2
@@ -22,9 +21,11 @@ import sys
 import setting
 import image_detection
 import window_manager
+import pygetwindow
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QTabWidget, QVBoxLayout, QPushButton, QGridLayout, QCheckBox
+from qt_material import apply_stylesheet
 
 SETTING_PATH = './setting.json'
 FREQUENCY = 40
@@ -53,24 +54,26 @@ class MineFish(QWidget):
         )
 
         self.initialize_ui()
+        self.set_preview_active()
+        self.load_resources()
+        self.load_language()
+
         self.search_window()
 
     def initialize_ui(self) -> None:
-        self.capturing_label = QLabel('Searching for the Minecraft window...')
-        self.capturing_label.setAlignment(Qt.AlignCenter)
+        apply_stylesheet(self, theme='dark_lightgreen.xml')
 
         preview_tab = self.initialize_preview_tab()
         setting_tab = QWidget()
         about_tab = QWidget()
 
-        self.main_tabs = QTabWidget()
-        self.main_tabs.addTab(preview_tab, 'Preview')
-        self.main_tabs.addTab(setting_tab, 'Setting')
-        self.main_tabs.addTab(about_tab, 'About')
+        main_tabs = QTabWidget()
+        main_tabs.addTab(preview_tab, 'Preview')
+        main_tabs.addTab(setting_tab, 'Setting')
+        main_tabs.addTab(about_tab, 'About')
 
         box_layout = QVBoxLayout()
-        box_layout.addWidget(self.capturing_label)
-        box_layout.addWidget(self.main_tabs)
+        box_layout.addWidget(main_tabs)
 
         self.setLayout(box_layout)
         self.setWindowTitle('MineFish')
@@ -80,30 +83,68 @@ class MineFish(QWidget):
     def initialize_preview_tab(self) -> 'QWidget()':
         preview_tab = QWidget()
 
+        self.capturing_label = QLabel('Searching for the Minecraft window...')
+        self.capturing_label.setAlignment(Qt.AlignCenter)
+
         self.active_toggle = QCheckBox('Active')
+        self.active_toggle.setChecked(False)
+        self.active_toggle.stateChanged.connect(self.set_preview_active)
 
-        target_label = QLabel('Target Image')
-        target_pixmap = QPixmap(self.setting.setting['image'])
-        target_image = QLabel()
-        target_image.setPixmap(target_pixmap)
+        self.target_label = QLabel('Target Image')
+        self.target_image = QLabel()
 
-        capture_label = QLabel('Captured Image')
+        self.capture_label = QLabel('Captured Image')
         self.capture_image = QLabel()
 
         grid_layout = QGridLayout()
+        grid_layout.addWidget(self.capturing_label, 0, 0)
         grid_layout.addWidget(self.active_toggle, 0, 0)
-        grid_layout.addWidget(target_label, 1, 0)
-        grid_layout.addWidget(target_image, 2, 0)
-        grid_layout.addWidget(capture_label, 3, 0)
+        grid_layout.addWidget(self.target_label, 1, 0)
+        grid_layout.addWidget(self.target_image, 2, 0)
+        grid_layout.addWidget(self.capture_label, 3, 0)
         grid_layout.addWidget(self.capture_image, 4, 0)
 
         preview_tab.setLayout(grid_layout)
 
         return preview_tab
 
+    def set_preview_active(self) -> None:
+        state = self.active_toggle.checkState()
+        self.target_label.setEnabled(state)
+        self.target_image.setEnabled(state)
+        self.capture_label.setEnabled(state)
+        self.capture_image.setEnabled(state)
+
+        self.detect(state)
+
+    def set_preview_visibility(self, state: bool) -> None:
+        self.active_toggle.setVisible(state)
+        self.target_label.setVisible(state)
+        self.target_image.setVisible(state)
+        self.capture_label.setVisible(state)
+        self.capture_image.setVisible(state)
+        self.capturing_label.setVisible(not state)
+
+    def initialize_setting_tab(self):
+        setting_tab = QWidget()
+
+
+        grid_layout = QGridLayout()
+        grid_layout.addWidget(self.capturing_label, 0, 0)
+
+        setting_tab.setLayout(grid_layout)
+
+        return setting_tab
+
+    def load_resources(self) -> None:
+        self.target_pixmap = QPixmap(self.setting.setting['image'])
+        self.target_image.setPixmap(self.target_pixmap)
+
+    def load_language(self) -> None:
+        pass
+
     def search_window(self) -> None:
-        self.main_tabs.setVisible(False)
-        self.capturing_label.setVisible(True)
+        self.set_preview_visibility(False)
 
         self.search_window_timer = QTimer()
         self.search_window_timer.setInterval(500)
@@ -113,26 +154,33 @@ class MineFish(QWidget):
     def search_window_timer_event(self) -> None:
         self.game_window = window_manager.get_matched_window(MATCH)
         if self.game_window != None:
-            self.main_tabs.setVisible(True)
-            self.capturing_label.setVisible(False)
+            self.set_preview_visibility(True)
             self.search_window_timer.stop()
-            self.detect()
 
-    def detect(self) -> None:
+    def detect(self, state: bool) -> None:
         delay = int(self.setting.setting['detection_delay'] * 1000)
-        self.match_timer = QTimer()
-        self.match_timer.setInterval(delay)
-        self.match_timer.timeout.connect(self.detect_timer)
-        self.match_timer.start()
+        self.detect_timer = QTimer()
+        self.detect_timer.setInterval(delay)
+        self.detect_timer.timeout.connect(self.detect_timer_event)
 
-    def detect_timer(self) -> None:
-        left, top, width, height = window_manager.get_window_size(self.game_window)
-        p1, p2 = self.image_detection.get_capture_points(left, top, width, height)
+        if state:
+            self.detect_timer.start()
+        else:
+            self.detect_timer.stop()
 
-        org_image, gray_image = self.image_detection.capture_area(p1, p2)
-        detected, org_image = self.image_detection.image_match(org_image, gray_image)
+    def detect_timer_event(self) -> None:
+        try:
+            left, top, width, height = window_manager.get_window_size(self.game_window)
+            p1, p2 = self.image_detection.get_capture_points(left, top, width, height)
 
-        self.capture_image.setPixmap(self.to_pixmap(org_image))
+            org_image, gray_image = self.image_detection.capture_area(p1, p2)
+            detected, org_image = self.image_detection.image_match(org_image, gray_image)
+
+            self.capture_image.setPixmap(self.to_pixmap(org_image))
+        except pygetwindow.PyGetWindowException:
+            self.active_toggle.setCheckState(False)
+            self.set_preview_visibility(False)
+            self.search_window()
 
     def to_pixmap(self, image):
         height, width, channel = image.shape
