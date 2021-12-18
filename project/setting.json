@@ -3,5 +3,8 @@
 	"display_language": "./language/kr.json",
 	"accuracy": 0.7,
 	"detection_delay": 0.3,
-	"throwing_delay": 0.5
+	"throwing_delay": 0.5,
+	"frequency": 40,
+	"min_scale": 0.5,
+	"max_scale": 2.0
 }
