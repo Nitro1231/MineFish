@@ -25,12 +25,15 @@ class WindowTooSmallError(Exception):
 
 class ImageDetection():
     def __init__(self, target_path: str, accuracy: float, frequency: int, min_scale: float, max_scale: float) -> None:
+        self.load_target_image(target_path)
+        self.accuracy = accuracy
+        self.frequency = frequency
+        self.min_scale = min_scale
+        self.max_scale = max_scale
+
+    def load_target_image(self, target_path: str) -> None:
         target_image = cv2.imread(target_path)
-        self._target = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
-        self._accuracy = accuracy
-        self._frequency = frequency
-        self._min_scale = min_scale
-        self._max_scale = max_scale
+        self.target = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
 
     def get_capture_points(self, left: int, top: int, width: int, height: int) -> tuple(tuple()):
         p1 = (left + int(width/2), top + int(height/5*3))
@@ -43,26 +46,26 @@ class ImageDetection():
         return org_image, gray_image
 
     def image_match(self, org_image: np.ndarray, gray_image: np.ndarray) -> tuple():
-        target_w, target_h = self._target.shape[::-1]
+        target_w, target_h = self.target.shape[::-1]
         image_w, image_h = gray_image.shape[::-1]
-        min_w = target_w * self._min_scale
-        min_h = target_h * self._min_scale
+        min_w = target_w * self.min_scale
+        min_h = target_h * self.min_scale
 
         if image_w < min_w or image_h < min_h:
             raise WindowTooSmallError()
 
-        for scale in np.linspace(self._min_scale, self._max_scale, self._frequency):
+        for scale in np.linspace(self.min_scale, self.max_scale, self.frequency):
             # Resizing
             target = imutils.resize(
-                image=self._target,
-                width=int(self._target.shape[1] * scale)
+                image=self.target,
+                width=int(self.target.shape[1] * scale)
             )
             target_w, target_h = target.shape[::-1]
 
             try:
                 res = cv2.matchTemplate(gray_image, target, cv2.TM_CCOEFF_NORMED)
 
-                loc = np.where(res >= self._accuracy)
+                loc = np.where(res >= self.accuracy)
                 if len(list(zip(*loc[::-1]))) > 0:
                     # Image detected.
                     for pt in zip(*loc[::-1]):

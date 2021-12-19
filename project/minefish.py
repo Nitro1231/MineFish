@@ -17,8 +17,6 @@
 
 import os
 import sys
-
-from cv2 import validateDisparity
 import setting
 import image_detection
 import window_manager
@@ -35,8 +33,7 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QCheckBox,
     QComboBox,
-    QSlider,
-    QGroupBox
+    QSlider
 )
 from qt_material import apply_stylesheet
 
@@ -47,7 +44,7 @@ WIDTH = 600
 HEIGHT = 400
 MATCH = {
     'include': ['Minecraft'],
-    'exclude': ['Updater']  # Launcher
+    'exclude': ['Launcher', 'Updater']  # Launcher
 }
 
 
@@ -55,7 +52,6 @@ class MineFish(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.setting = setting.Setting(SETTING_PATH)
-        self.setting.verify_setting()
 
         self.initialize_ui()
         self.set_preview_active()
@@ -285,7 +281,9 @@ class MineFish(QWidget):
 
     def make_slider_event(self, value_display: 'QLabel()', key: str, scale: int, value_type: 'function') -> 'function':
         def slider_event(value: int) -> None:
-            value_display.setText(str(value_type(value / scale)))
+            new_value = value_type(value / scale)
+            value_display.setText(str(new_value))
+            self.setting.setting[key] = new_value
         return slider_event
 
     def get_files(self, path: str) -> list():
