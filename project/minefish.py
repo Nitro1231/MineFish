@@ -13,349 +13,122 @@
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
 
-# https://wikidocs.net/21849
-
-import os
-import sys
-import setting
-import image_detection
-import window_manager
+import cv2
+import json
+import imutils
+import pyautogui
 import pygetwindow
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import (
-    QApplication,
-    QLabel,
-    QWidget,
-    QTabWidget,
-    QVBoxLayout,
-    QPushButton,
-    QGridLayout,
-    QCheckBox,
-    QComboBox,
-    QSlider
-)
-from qt_material import apply_stylesheet
+import numpy as np
 
 SETTING_PATH = '.\\setting.json'
-IMAGE_PATH = '.\\image'
-LANGUAGE_PATH = '.\\language'
-WIDTH = 600
-HEIGHT = 400
-MATCH = {
-    'include': ['Minecraft'],
-    'exclude': ['Launcher', 'Updater']  # Launcher
+MATCHED_COLOR = (196, 229, 56)
+MATCH_LIST = {
+    'include': ['Minecraft'], # '.'
+    'exclude': ['Updater', 'MineFish']  # Launcher
 }
 
 
-class MineFish(QWidget):
+class WindowTooSmallError(Exception):
+    pass
+
+
+class MineFish():
     def __init__(self) -> None:
-        super().__init__()
-        self.setting = setting.Setting(SETTING_PATH)
+        self.setting = None
+        self.game_window = None
+        self.load_setting()
+        self.load_target_image()
 
-        self.initialize_ui()
-        self.set_preview_active()
-        self.load_resources()
-        self.load_language()
+    def load_setting(self) -> None:
+        with open(SETTING_PATH, 'r', encoding='utf-8') as f:
+            self.setting = json.load(f)
 
-        self.search_window()
+    def save_setting(self) -> None:
+        with open(SETTING_PATH, 'w', encoding='utf-8') as f:
+            json.dump(self.setting, f, indent='\t')
 
-    def initialize_ui(self) -> None:
-        apply_stylesheet(self, theme='dark_lightgreen.xml')
+    def load_target_image(self) -> None:
+        target_image_raw = cv2.imread(self.setting['image'])
+        self.target_image = cv2.cvtColor(target_image_raw, cv2.COLOR_BGR2GRAY)
 
-        preview_tab = self.initialize_preview_tab()
-        setting_tab = self.initialize_setting_tab()
-        about_tab = QWidget()
+    def select_matched_window(self) -> None:
+        windows = pygetwindow.getAllWindows()
 
-        main_tabs = QTabWidget()
-        main_tabs.addTab(preview_tab, 'Preview')
-        main_tabs.addTab(setting_tab, 'Setting')
-        main_tabs.addTab(about_tab, 'About')
+        self.game_window = None
+        for window in windows:
+            if self._match_text(window.title, MATCH_LIST):
+                self.game_window = window
+                print(window)
 
-        box_layout = QVBoxLayout()
-        box_layout.addWidget(main_tabs)
+    def detect(self) -> tuple():
+        left, top, width, height = self._get_window_size(self.game_window)
+        p1, p2 = self._get_capture_points(left, top, width, height)
 
-        self.setLayout(box_layout)
-        self.setWindowTitle('MineFish')
-        self.setGeometry(300, 300, WIDTH, HEIGHT)
-        self.show()
+        org_image, gray_image = self._capture_area(p1, p2)
+        return self._image_match(org_image, gray_image)
 
-    def initialize_preview_tab(self) -> 'QWidget()':
-        preview_tab = QWidget()
+    def _match_text(self, text: str, match_list: dict()) -> bool:
+        include = True
+        exclude = True
 
-        self.capturing_label = QLabel('Searching for the Minecraft window...')
-        self.capturing_label.setAlignment(Qt.AlignCenter)
+        for word in match_list['include']:
+            if not word in text:
+                include = False
+                break
 
-        self.active_toggle = QCheckBox('Active')
-        self.active_toggle.setChecked(False)
-        self.active_toggle.stateChanged.connect(self.set_preview_active)
+        for word in match_list['exclude']:
+            if word in text:
+                exclude = False
+                break
 
-        self.target_label = QLabel('Target Image')
-        self.target_image = QLabel()
+        return include and exclude
 
-        self.capture_label = QLabel('Captured Image')
-        self.capture_image = QLabel()
+    def _get_window_size(self, handle: 'Win32Window') -> tuple():
+        left, top = handle.left, handle.top
+        width, height = handle.width, handle.height
+        return left, top, width, height
 
-        box_layout = QVBoxLayout()
-        box_layout.addWidget(self.capturing_label)
-        box_layout.addWidget(self.active_toggle)
-        box_layout.addWidget(self.target_label)
-        box_layout.addWidget(self.target_image)
-        box_layout.addWidget(self.capture_label)
-        box_layout.addWidget(self.capture_image)
-        preview_tab.setLayout(box_layout)
+    def _get_capture_points(self, left: int, top: int, width: int, height: int) -> tuple(tuple()):
+        p1 = (left + int(width/2), top + int(height/5*3))
+        p2 = (int(width/2), int(height/5*2))
+        return p1, p2
 
-        return preview_tab
+    def _capture_area(self, p1: tuple, p2: tuple) -> tuple():
+        org_image = np.array(pyautogui.screenshot(region=p1+p2))
+        gray_image = cv2.cvtColor(org_image, cv2.COLOR_BGR2GRAY)
+        return org_image, gray_image
 
-    def set_preview_active(self) -> None:
-        state = self.active_toggle.checkState()
-        self.target_label.setEnabled(state)
-        self.target_image.setEnabled(state)
-        self.capture_label.setEnabled(state)
-        self.capture_image.setEnabled(state)
+    def _image_match(self, org_image: np.ndarray, gray_image: np.ndarray) -> tuple():
+        target_w, target_h = self.target_image.shape[::-1]
+        image_w, image_h = gray_image.shape[::-1]
+        min_w = target_w * self.setting['min_scale']
+        min_h = target_h * self.setting['min_scale']
 
-        self.detect(state)
+        if image_w < min_w or image_h < min_h:
+            raise WindowTooSmallError()
 
-    def set_preview_visibility(self, state: bool) -> None:
-        self.active_toggle.setVisible(state)
-        self.target_label.setVisible(state)
-        self.target_image.setVisible(state)
-        self.capture_label.setVisible(state)
-        self.capture_image.setVisible(state)
-        self.capturing_label.setVisible(not state)
-
-    def initialize_setting_tab(self):
-        setting_tab = QWidget()
-
-        # Target Image
-        target_image_title = QLabel('Target Image')
-        target_image_list = QComboBox()
-        target_image_list.addItems(self.get_files(IMAGE_PATH))
-        target_image_dialog_button = QPushButton('Open File')
-        target_image_folder_button = QPushButton('Open Folder')
-        
-        target_image_box_layout = QGridLayout()
-        target_image_box_layout.addWidget(target_image_title, 0, 0)
-        target_image_box_layout.addWidget(target_image_list, 1, 0, 1, 8)
-        target_image_box_layout.addWidget(target_image_dialog_button, 1, 9, 1, 1)
-        target_image_box_layout.addWidget(target_image_folder_button, 1, 10, 1, 1)
-
-        # Display Language
-        language_title = QLabel('Display Language')
-        language_list = QComboBox()
-        language_list.addItems(self.get_files(LANGUAGE_PATH))
-
-        # normal_box
-        # Accuracy
-        accuracy_title = QLabel('Accuracy')
-        accuracy_value = QLabel()
-        accuracy_value.setAlignment(Qt.AlignCenter)
-        accuracy_bar = QSlider(Qt.Horizontal)
-        accuracy_bar.setRange(30, 90)
-        accuracy_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=accuracy_value,
-                key='accuracy',
-                scale=100,
-                value_type=float
+        for scale in np.linspace(self.setting['min_scale'], self.setting['max_scale'], self.setting['frequency']):
+            # Resizing
+            target = imutils.resize(
+                image=self.target_image,
+                width=int(self.target_image.shape[1] * scale)
             )
-        )
+            target_w, target_h = target.shape[::-1]
 
-        # Detection Delay
-        detection_title = QLabel('Detection Delay')
-        detection_value = QLabel()
-        detection_value.setAlignment(Qt.AlignCenter)
-        detection_bar = QSlider(Qt.Horizontal)
-        detection_bar.setRange(10, 50)
-        detection_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=detection_value,
-                key='detection_delay',
-                scale=100,
-                value_type=float
-            )
-        )
+            try:
+                res = cv2.matchTemplate(gray_image, target, cv2.TM_CCOEFF_NORMED)
 
-        # Throwing Delay
-        throwing_title = QLabel('Throwing Delay')
-        throwing_value = QLabel()
-        throwing_value.setAlignment(Qt.AlignCenter)
-        throwing_bar = QSlider(Qt.Horizontal)
-        throwing_bar.setRange(30, 500)
-        throwing_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=throwing_value,
-                key='throwing_delay',
-                scale=100,
-                value_type=float
-            )
-        )
-
-        normal_box = QVBoxLayout()
-        normal_box.addWidget(accuracy_title)
-        normal_box.addWidget(accuracy_bar)
-        normal_box.addWidget(accuracy_value)
-        normal_box.addStretch(1)
-        normal_box.addWidget(detection_title)
-        normal_box.addWidget(detection_bar)
-        normal_box.addWidget(detection_value)
-        normal_box.addStretch(1)
-        normal_box.addWidget(throwing_title)
-        normal_box.addWidget(throwing_bar)
-        normal_box.addWidget(throwing_value)
-
-        # advanced_box
-        # Frequency
-        frequency_title = QLabel('Frequency')
-        frequency_value = QLabel()
-        frequency_value.setAlignment(Qt.AlignCenter)
-        frequency_bar = QSlider(Qt.Horizontal)
-        frequency_bar.setRange(10, 100)
-        frequency_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=frequency_value,
-                key='frequency',
-                scale=1,
-                value_type=int
-            )
-        )
-
-        # Min Scale
-        min_scale_title = QLabel('Min Scale')
-        min_scale_value = QLabel()
-        min_scale_value.setAlignment(Qt.AlignCenter)
-        min_scale_bar = QSlider(Qt.Horizontal)
-        min_scale_bar.setRange(10, 80)
-        min_scale_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=min_scale_value,
-                key='min_scale',
-                scale=100,
-                value_type=float
-            )
-        )
-        
-        # Max Scale
-        max_scale_title = QLabel('Max Scale')
-        max_scale_value = QLabel()
-        max_scale_value.setAlignment(Qt.AlignCenter)
-        max_scale_bar = QSlider(Qt.Horizontal)
-        max_scale_bar.setRange(90, 250)
-        max_scale_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=max_scale_value,
-                key='max_scale',
-                scale=100,
-                value_type=float
-            )
-        )
-
-        advanced_box = QVBoxLayout()
-        advanced_box.addWidget(frequency_title)
-        advanced_box.addWidget(frequency_bar)
-        advanced_box.addWidget(frequency_value)
-        advanced_box.addStretch(1)
-        advanced_box.addWidget(min_scale_title)
-        advanced_box.addWidget(min_scale_bar)
-        advanced_box.addWidget(min_scale_value)
-        advanced_box.addStretch(1)
-        advanced_box.addWidget(max_scale_title)
-        advanced_box.addWidget(max_scale_bar)
-        advanced_box.addWidget(max_scale_value)
-
-        slider_grid = QGridLayout()
-        slider_grid.addLayout(normal_box, 0, 0)
-        slider_grid.addLayout(advanced_box, 0, 1)
-
-        box_layout = QVBoxLayout()
-        box_layout.addLayout(target_image_box_layout)
-        box_layout.addStretch(1)
-        box_layout.addWidget(language_title)
-        box_layout.addWidget(language_list)
-        box_layout.addStretch(1)
-        box_layout.addLayout(slider_grid)
-
-        setting_tab.setLayout(box_layout)
-        
-        return setting_tab
-
-    def make_slider_event(self, value_display: 'QLabel()', key: str, scale: int, value_type: 'function') -> 'function':
-        def slider_event(value: int) -> None:
-            new_value = value_type(value / scale)
-            value_display.setText(str(new_value))
-            self.setting.setting[key] = new_value
-        return slider_event
-
-    def get_files(self, path: str) -> list():
-        files = list()
-        for item in os.listdir(path):
-            item_path = os.path.join(path, item)
-            if os.path.isfile(item_path):
-                files.append(item_path)
-        return files
-
-    def load_resources(self) -> None:
-        self.image_detection = image_detection.ImageDetection(
-            target_path=self.setting.setting['image'],
-            accuracy=self.setting.setting['accuracy'],
-            frequency=self.setting.setting['frequency'],
-            min_scale=self.setting.setting['min_scale'],
-            max_scale=self.setting.setting['max_scale']
-        )
-
-        self.target_pixmap = QPixmap(self.setting.setting['image'])
-        self.target_image.setPixmap(self.target_pixmap)
-
-    def load_language(self) -> None:
-        pass
-
-    def search_window(self) -> None:
-        self.set_preview_visibility(False)
-
-        self.search_window_timer = QTimer()
-        self.search_window_timer.setInterval(500)
-        self.search_window_timer.timeout.connect(self.search_window_timer_event)
-        self.search_window_timer.start()
-
-    def search_window_timer_event(self) -> None:
-        self.game_window = window_manager.get_matched_window(MATCH)
-        if self.game_window != None:
-            self.set_preview_visibility(True)
-            self.search_window_timer.stop()
-
-    def detect(self, state: bool) -> None:
-        delay = int(self.setting.setting['detection_delay'] * 1000)
-        self.detect_timer = QTimer()
-        self.detect_timer.setInterval(delay)
-        self.detect_timer.timeout.connect(self.detect_timer_event)
-
-        if state:
-            self.detect_timer.start()
-        else:
-            self.detect_timer.stop()
-
-    def detect_timer_event(self) -> None:
-        try:
-            left, top, width, height = window_manager.get_window_size(self.game_window)
-            p1, p2 = self.image_detection.get_capture_points(left, top, width, height)
-
-            org_image, gray_image = self.image_detection.capture_area(p1, p2)
-            detected, org_image = self.image_detection.image_match(org_image, gray_image)
-
-            self.capture_image.setPixmap(self.to_pixmap(org_image))
-        except pygetwindow.PyGetWindowException:
-            self.active_toggle.setCheckState(False)
-            self.set_preview_visibility(False)
-            self.search_window()
-
-    def to_pixmap(self, image):
-        height, width, channel = image.shape
-        bytesPerLine = 3 * width
-        qimg = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        return QPixmap.fromImage(qimg)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = MineFish()
-    sys.exit(app.exec_())
+                loc = np.where(res >= self.setting['accuracy'])
+                if len(list(zip(*loc[::-1]))) > 0:
+                    # Image detected.
+                    for pt in zip(*loc[::-1]):
+                        # Draw a rectangle on the detected area.
+                        cv2.rectangle(
+                            org_image, pt,
+                            (pt[0] + target_w, pt[1] + target_h),
+                            MATCHED_COLOR, 2
+                        )
+                        return True, org_image
+            except:
+                break
+        return False, org_image
