@@ -1,6 +1,6 @@
 {
-	"image": "./image/en_ver1.png",
-	"display_language": "./language/kr.json",
+	"image": ".\\image\\en_ver1.png",
+	"display_language": ".\\language\\kr.json",
 	"accuracy": 0.7,
 	"detection_delay": 0.3,
 	"throwing_delay": 0.5,

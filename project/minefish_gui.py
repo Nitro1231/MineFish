@@ -23,6 +23,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
+    QHBoxLayout,
     QLabel,
     QWidget,
     QTabWidget,
@@ -35,11 +36,18 @@ from PyQt5.QtWidgets import (
 )
 from qt_material import apply_stylesheet
 
-IMAGE_PATH = '.\\image'
-LANGUAGE_PATH = '.\\language'
 WIDTH = 600
 HEIGHT = 400
-
+IMAGE_PATH = '.\\image'
+LANGUAGE_PATH = '.\\language'
+INITIAL_SETTING = {
+    "accuracy": 0.7,
+	"detection_delay": 0.3,
+	"throwing_delay": 0.5,
+	"frequency": 40,
+	"min_scale": 0.5,
+	"max_scale": 2.0
+}
 
 class MineFishGUI(QWidget):
     def __init__(self) -> None:
@@ -121,34 +129,46 @@ class MineFishGUI(QWidget):
         setting_tab = QWidget()
 
         # Target Image
-        target_image_title = QLabel('Target Image')
-        target_image_list = QComboBox()
-        target_image_list.addItems(self.get_files(IMAGE_PATH))
-        target_image_dialog_button = QPushButton('Open File')
-        target_image_folder_button = QPushButton('Open Folder')
+        self.target_image_title = QLabel('Target Image')
+        self.target_image_list = QComboBox()
+        self.target_image_list.activated.connect(self.setting_combobox_item_change_event)
+        self.target_image_dialog_button = QPushButton('Open File')
+        self.target_image_folder_button = QPushButton('Open Folder')
 
         target_image_box_layout = QGridLayout()
-        target_image_box_layout.addWidget(target_image_title, 0, 0)
-        target_image_box_layout.addWidget(target_image_list, 1, 0, 1, 8)
-        target_image_box_layout.addWidget(target_image_dialog_button, 1, 9, 1, 1)
-        target_image_box_layout.addWidget(target_image_folder_button, 1, 10, 1, 1)
+        target_image_box_layout.addWidget(self.target_image_title, 0, 0)
+        target_image_box_layout.addWidget(self.target_image_list, 1, 0, 1, 8)
+        target_image_box_layout.addWidget(self.target_image_dialog_button, 1, 9, 1, 1)
+        target_image_box_layout.addWidget(self.target_image_folder_button, 1, 10, 1, 1)
 
         # Display Language
-        language_title = QLabel('Display Language')
-        language_list = QComboBox()
-        language_list.addItems(self.get_files(LANGUAGE_PATH))
+        self.language_title = QLabel('Display Language')
+        self.language_list = QComboBox()
+        self.language_list.activated.connect(self.setting_combobox_item_change_event)
 
         slider_grid = QGridLayout()
         slider_grid.addLayout(self.initialize_normal_setting_box(), 0, 0)
         slider_grid.addLayout(self.initialize_advanced_setting_box(), 0, 1)
 
+        self.refresh_button = QPushButton('Refresh')
+        self.refresh_button.clicked.connect(self.load_resources)
+
+        self.reset_button = QPushButton('Reset Setting')
+        self.reset_button.clicked.connect(self.reset_setting)
+        
+        toolbar_layout = QHBoxLayout()
+        toolbar_layout.addWidget(self.refresh_button)
+        toolbar_layout.addWidget(self.reset_button)
+
         box_layout = QVBoxLayout()
         box_layout.addLayout(target_image_box_layout)
         box_layout.addStretch(1)
-        box_layout.addWidget(language_title)
-        box_layout.addWidget(language_list)
+        box_layout.addWidget(self.language_title)
+        box_layout.addWidget(self.language_list)
         box_layout.addStretch(1)
         box_layout.addLayout(slider_grid)
+        box_layout.addStretch(1)
+        box_layout.addLayout(toolbar_layout)
 
         setting_tab.setLayout(box_layout)
 
@@ -156,14 +176,14 @@ class MineFishGUI(QWidget):
 
     def initialize_normal_setting_box(self) -> QVBoxLayout:
         # Accuracy
-        accuracy_title = QLabel('Accuracy')
-        accuracy_value = QLabel()
-        accuracy_value.setAlignment(Qt.AlignCenter)
-        accuracy_bar = QSlider(Qt.Horizontal)
-        accuracy_bar.setRange(30, 90)
-        accuracy_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=accuracy_value,
+        self.accuracy_title = QLabel('Accuracy')
+        self.accuracy_value = QLabel()
+        self.accuracy_value.setAlignment(Qt.AlignCenter)
+        self.accuracy_bar = QSlider(Qt.Horizontal)
+        self.accuracy_bar.setRange(30, 90)
+        self.accuracy_bar.valueChanged.connect(
+            self.make_setting_slider_event(
+                value_display=self.accuracy_value,
                 key='accuracy',
                 scale=100,
                 value_type=float
@@ -171,14 +191,14 @@ class MineFishGUI(QWidget):
         )
 
         # Detection Delay
-        detection_title = QLabel('Detection Delay')
-        detection_value = QLabel()
-        detection_value.setAlignment(Qt.AlignCenter)
-        detection_bar = QSlider(Qt.Horizontal)
-        detection_bar.setRange(10, 50)
-        detection_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=detection_value,
+        self.detection_title = QLabel('Detection Delay')
+        self.detection_value = QLabel()
+        self.detection_value.setAlignment(Qt.AlignCenter)
+        self.detection_bar = QSlider(Qt.Horizontal)
+        self.detection_bar.setRange(10, 50)
+        self.detection_bar.valueChanged.connect(
+            self.make_setting_slider_event(
+                value_display=self.detection_value,
                 key='detection_delay',
                 scale=100,
                 value_type=float
@@ -186,14 +206,14 @@ class MineFishGUI(QWidget):
         )
 
         # Throwing Delay
-        throwing_title = QLabel('Throwing Delay')
-        throwing_value = QLabel()
-        throwing_value.setAlignment(Qt.AlignCenter)
-        throwing_bar = QSlider(Qt.Horizontal)
-        throwing_bar.setRange(30, 500)
-        throwing_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=throwing_value,
+        self.throwing_title = QLabel('Throwing Delay')
+        self.throwing_value = QLabel()
+        self.throwing_value.setAlignment(Qt.AlignCenter)
+        self.throwing_bar = QSlider(Qt.Horizontal)
+        self.throwing_bar.setRange(30, 500)
+        self.throwing_bar.valueChanged.connect(
+            self.make_setting_slider_event(
+                value_display=self.throwing_value,
                 key='throwing_delay',
                 scale=100,
                 value_type=float
@@ -201,30 +221,30 @@ class MineFishGUI(QWidget):
         )
 
         normal_box = QVBoxLayout()
-        normal_box.addWidget(accuracy_title)
-        normal_box.addWidget(accuracy_bar)
-        normal_box.addWidget(accuracy_value)
+        normal_box.addWidget(self.accuracy_title)
+        normal_box.addWidget(self.accuracy_bar)
+        normal_box.addWidget(self.accuracy_value)
         normal_box.addStretch(1)
-        normal_box.addWidget(detection_title)
-        normal_box.addWidget(detection_bar)
-        normal_box.addWidget(detection_value)
+        normal_box.addWidget(self.detection_title)
+        normal_box.addWidget(self.detection_bar)
+        normal_box.addWidget(self.detection_value)
         normal_box.addStretch(1)
-        normal_box.addWidget(throwing_title)
-        normal_box.addWidget(throwing_bar)
-        normal_box.addWidget(throwing_value)
+        normal_box.addWidget(self.throwing_title)
+        normal_box.addWidget(self.throwing_bar)
+        normal_box.addWidget(self.throwing_value)
 
         return normal_box
 
     def initialize_advanced_setting_box(self) -> QVBoxLayout:
         # Frequency
-        frequency_title = QLabel('Frequency')
-        frequency_value = QLabel()
-        frequency_value.setAlignment(Qt.AlignCenter)
-        frequency_bar = QSlider(Qt.Horizontal)
-        frequency_bar.setRange(10, 100)
-        frequency_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=frequency_value,
+        self.frequency_title = QLabel('Frequency')
+        self.frequency_value = QLabel()
+        self.frequency_value.setAlignment(Qt.AlignCenter)
+        self.frequency_bar = QSlider(Qt.Horizontal)
+        self.frequency_bar.setRange(10, 100)
+        self.frequency_bar.valueChanged.connect(
+            self.make_setting_slider_event(
+                value_display=self.frequency_value,
                 key='frequency',
                 scale=1,
                 value_type=int
@@ -232,14 +252,14 @@ class MineFishGUI(QWidget):
         )
 
         # Min Scale
-        min_scale_title = QLabel('Min Scale')
-        min_scale_value = QLabel()
-        min_scale_value.setAlignment(Qt.AlignCenter)
-        min_scale_bar = QSlider(Qt.Horizontal)
-        min_scale_bar.setRange(10, 80)
-        min_scale_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=min_scale_value,
+        self.min_scale_title = QLabel('Min Scale')
+        self.min_scale_value = QLabel()
+        self.min_scale_value.setAlignment(Qt.AlignCenter)
+        self.min_scale_bar = QSlider(Qt.Horizontal)
+        self.min_scale_bar.setRange(10, 80)
+        self.min_scale_bar.valueChanged.connect(
+            self.make_setting_slider_event(
+                value_display=self.min_scale_value,
                 key='min_scale',
                 scale=100,
                 value_type=float
@@ -247,14 +267,14 @@ class MineFishGUI(QWidget):
         )
 
         # Max Scale
-        max_scale_title = QLabel('Max Scale')
-        max_scale_value = QLabel()
-        max_scale_value.setAlignment(Qt.AlignCenter)
-        max_scale_bar = QSlider(Qt.Horizontal)
-        max_scale_bar.setRange(90, 250)
-        max_scale_bar.valueChanged.connect(
-            self.make_slider_event(
-                value_display=max_scale_value,
+        self.max_scale_title = QLabel('Max Scale')
+        self.max_scale_value = QLabel()
+        self.max_scale_value.setAlignment(Qt.AlignCenter)
+        self.max_scale_bar = QSlider(Qt.Horizontal)
+        self.max_scale_bar.setRange(90, 250)
+        self.max_scale_bar.valueChanged.connect(
+            self.make_setting_slider_event(
+                value_display=self.max_scale_value,
                 key='max_scale',
                 scale=100,
                 value_type=float
@@ -262,27 +282,60 @@ class MineFishGUI(QWidget):
         )
 
         advanced_box = QVBoxLayout()
-        advanced_box.addWidget(frequency_title)
-        advanced_box.addWidget(frequency_bar)
-        advanced_box.addWidget(frequency_value)
+        advanced_box.addWidget(self.frequency_title)
+        advanced_box.addWidget(self.frequency_bar)
+        advanced_box.addWidget(self.frequency_value)
         advanced_box.addStretch(1)
-        advanced_box.addWidget(min_scale_title)
-        advanced_box.addWidget(min_scale_bar)
-        advanced_box.addWidget(min_scale_value)
+        advanced_box.addWidget(self.min_scale_title)
+        advanced_box.addWidget(self.min_scale_bar)
+        advanced_box.addWidget(self.min_scale_value)
         advanced_box.addStretch(1)
-        advanced_box.addWidget(max_scale_title)
-        advanced_box.addWidget(max_scale_bar)
-        advanced_box.addWidget(max_scale_value)
+        advanced_box.addWidget(self.max_scale_title)
+        advanced_box.addWidget(self.max_scale_bar)
+        advanced_box.addWidget(self.max_scale_value)
 
         return advanced_box
 
-    def make_slider_event(self, value_display: 'QLabel()', key: str, scale: int, value_type: 'function') -> 'function':
-        def slider_event(value: int) -> None:
+    def make_setting_slider_event(self, value_display: QLabel, key: str, scale: int, value_type: 'class') -> 'function':
+        def setting_slider_event(value: int) -> None:
             new_value = value_type(value / scale)
             value_display.setText(str(new_value))
             self.minefish.setting[key] = new_value
-        return slider_event
+            self.minefish.save_setting()
+        return setting_slider_event
 
+    def setting_combobox_item_change_event(self) -> None:
+        self.minefish.setting['image'] = self.target_image_list.currentText()
+        self.minefish.setting['display_language'] = self.language_list.currentText()
+        self.minefish.save_setting()
+        self.load_resources()
+
+    def load_resources(self) -> None:
+        self.minefish.load_setting()
+        self.minefish.load_target_image()
+        self.target_pixmap = QPixmap(self.minefish.setting['image'])
+        self.target_image.setPixmap(self.target_pixmap)
+        self.target_image_list.clear()
+        self.language_list.clear()
+        self.target_image_list.addItems(self.get_files(IMAGE_PATH))
+        self.language_list.addItems(self.get_files(LANGUAGE_PATH))
+        self.set_combobox_item(self.target_image_list, self.minefish.setting['image'])
+        self.set_combobox_item(self.language_list, self.minefish.setting['display_language'])
+        self.accuracy_bar.setValue(int(self.minefish.setting['accuracy'] * 100))
+        self.detection_bar.setValue(int(self.minefish.setting['detection_delay'] * 100))
+        self.throwing_bar.setValue(int(self.minefish.setting['throwing_delay'] * 100))
+        self.frequency_bar.setValue(self.minefish.setting['frequency'])
+        self.min_scale_bar.setValue(int(self.minefish.setting['min_scale'] * 100))
+        self.max_scale_bar.setValue(int(self.minefish.setting['max_scale'] * 100))
+
+    def load_language(self) -> None:
+        pass
+
+    def set_combobox_item(self, combobox: QComboBox, text: str) -> None:
+        index = combobox.findText(text, Qt.MatchFixedString)
+        if index >= 0:
+            combobox.setCurrentIndex(index)
+    
     def get_files(self, path: str) -> list():
         files = list()
         for item in os.listdir(path):
@@ -291,13 +344,11 @@ class MineFishGUI(QWidget):
                 files.append(item_path)
         return files
 
-    def load_resources(self) -> None:
-        self.minefish.load_target_image()
-        self.target_pixmap = QPixmap(self.minefish.setting['image'])
-        self.target_image.setPixmap(self.target_pixmap)
-
-    def load_language(self) -> None:
-        pass
+    def reset_setting(self) -> None:
+        for key in INITIAL_SETTING:
+            self.minefish.setting[key] = INITIAL_SETTING[key]
+        self.minefish.save_setting()
+        self.load_resources()
 
     def search_window(self) -> None:
         self.set_preview_visibility(False)
