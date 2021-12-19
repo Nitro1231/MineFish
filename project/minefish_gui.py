@@ -18,6 +18,7 @@
 import os
 import sys
 import minefish
+import pyautogui
 import pygetwindow
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QImage, QPixmap
@@ -352,10 +353,7 @@ class MineFishGUI(QWidget):
 
     def search_window(self) -> None:
         self.set_preview_visibility(False)
-
-        self.search_window_timer = QTimer()
-        self.search_window_timer.setInterval(500)
-        self.search_window_timer.timeout.connect(self.search_window_timer_event)
+        self.search_window_timer = self.make_timer(500, self.search_window_timer_event)
         self.search_window_timer.start()
 
     def search_window_timer_event(self) -> None:
@@ -365,10 +363,8 @@ class MineFishGUI(QWidget):
             self.search_window_timer.stop()
 
     def detect(self, state: bool) -> None:
-        delay = int(self.minefish.setting['detection_delay'] * 1000)
-        self.detect_timer = QTimer()
-        self.detect_timer.setInterval(delay)
-        self.detect_timer.timeout.connect(self.detect_timer_event)
+        interval = int(self.minefish.setting['detection_delay'] * 1000)
+        self.detect_timer = self.make_timer(interval, self.detect_timer_event)
 
         if state:
             self.detect_timer.start()
@@ -379,10 +375,35 @@ class MineFishGUI(QWidget):
         try:
             detected, org_image = self.minefish.detect()
             self.capture_image.setPixmap(self.to_pixmap(org_image))
+            if detected:
+                self.throw_rod()
         except pygetwindow.PyGetWindowException:
             self.active_toggle.setCheckState(False)
             self.set_preview_visibility(False)
             self.search_window()
+
+    def throw_rod(self) -> None:
+        self.detect_timer.stop()
+        pyautogui.click(button='right')
+        interval = int(self.minefish.setting['throwing_delay'] * 1000)
+        self.throw_timer = self.make_timer(interval, self.throw_timer_event)
+        self.throw_timer.start()
+
+    def throw_timer_event(self) -> None:
+        pyautogui.click(button='right')
+        self.delay_timer = self.make_timer(4000, self.delay_timer_event)
+        self.delay_timer.start()
+        self.throw_timer.stop()
+    
+    def delay_timer_event(self) -> None:
+        self.detect_timer.start()
+        self.delay_timer.stop()
+
+    def make_timer(self, interval: int, event: 'function') -> QTimer:
+        timer = QTimer()
+        timer.setInterval(interval)
+        timer.timeout.connect(event)
+        return timer
 
     def to_pixmap(self, image) -> QPixmap:
         height, width, channel = image.shape

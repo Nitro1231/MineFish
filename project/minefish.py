@@ -23,8 +23,8 @@ import numpy as np
 SETTING_PATH = '.\\setting.json'
 MATCHED_COLOR = (196, 229, 56)
 MATCH_LIST = {
-    'include': ['Minecraft'], # '.'
-    'exclude': ['Updater', 'MineFish']  # Launcher
+    'include': ['Minecraft', '.'], # '.'
+    'exclude': ['Launcher', 'Updater', 'MineFish']  # Launcher
 }
 
 
@@ -58,7 +58,6 @@ class MineFish():
         for window in windows:
             if self._match_text(window.title, MATCH_LIST):
                 self.game_window = window
-                print(window)
 
     def detect(self) -> tuple():
         left, top, width, height = self._get_window_size(self.game_window)
