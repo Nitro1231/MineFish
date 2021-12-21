@@ -43,12 +43,13 @@ IMAGE_PATH = '.\\image'
 LANGUAGE_PATH = '.\\language'
 INITIAL_SETTING = {
     "accuracy": 0.7,
-	"detection_delay": 0.3,
-	"throwing_delay": 0.5,
-	"frequency": 40,
-	"min_scale": 0.5,
-	"max_scale": 2.0
+   	"detection_delay": 0.3,
+   	"throwing_delay": 0.5,
+   	"frequency": 40,
+   	"min_scale": 0.5,
+   	"max_scale": 2.0
 }
+
 
 class MineFishGUI(QWidget):
     def __init__(self) -> None:
@@ -156,7 +157,7 @@ class MineFishGUI(QWidget):
 
         self.reset_button = QPushButton('Reset Setting')
         self.reset_button.clicked.connect(self.reset_setting)
-        
+
         toolbar_layout = QHBoxLayout()
         toolbar_layout.addWidget(self.refresh_button)
         toolbar_layout.addWidget(self.reset_button)
@@ -336,7 +337,7 @@ class MineFishGUI(QWidget):
         index = combobox.findText(text, Qt.MatchFixedString)
         if index >= 0:
             combobox.setCurrentIndex(index)
-    
+
     def get_files(self, path: str) -> list():
         files = list()
         for item in os.listdir(path):
@@ -394,7 +395,7 @@ class MineFishGUI(QWidget):
         self.delay_timer = self.make_timer(4000, self.delay_timer_event)
         self.delay_timer.start()
         self.throw_timer.stop()
-    
+
     def delay_timer_event(self) -> None:
         self.detect_timer.start()
         self.delay_timer.stop()
@@ -419,4 +420,3 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MineFishGUI()
     sys.exit(app.exec_())
-    
