@@ -20,9 +20,9 @@ import sys
 import minefish
 import pyautogui
 import pygetwindow
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QLabel,
@@ -39,8 +39,8 @@ from qt_material import apply_stylesheet
 
 WIDTH = 600
 HEIGHT = 400
-IMAGE_PATH = '.\\image'
-LANGUAGE_PATH = '.\\language'
+IMAGE_PATH = './image'
+LANGUAGE_PATH = './language'
 INITIAL_SETTING = {
     "accuracy": 0.7,
    	"detection_delay": 0.3,
@@ -49,7 +49,6 @@ INITIAL_SETTING = {
    	"min_scale": 0.5,
    	"max_scale": 2.0
 }
-
 
 class MineFishGUI(QWidget):
     def __init__(self) -> None:
@@ -87,7 +86,7 @@ class MineFishGUI(QWidget):
         preview_tab = QWidget()
 
         self.capturing_label = QLabel('Searching for the Minecraft window...')
-        self.capturing_label.setAlignment(Qt.AlignCenter)
+        self.capturing_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.active_toggle = QCheckBox('Active')
         self.active_toggle.setChecked(False)
@@ -111,7 +110,7 @@ class MineFishGUI(QWidget):
         return preview_tab
 
     def set_preview_active(self) -> None:
-        state = self.active_toggle.checkState()
+        state = self.active_toggle.isChecked()
         self.target_label.setEnabled(state)
         self.target_image.setEnabled(state)
         self.capture_label.setEnabled(state)
@@ -180,8 +179,8 @@ class MineFishGUI(QWidget):
         # Accuracy
         self.accuracy_title = QLabel('Accuracy')
         self.accuracy_value = QLabel()
-        self.accuracy_value.setAlignment(Qt.AlignCenter)
-        self.accuracy_bar = QSlider(Qt.Horizontal)
+        self.accuracy_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.accuracy_bar = QSlider(Qt.Orientation.Horizontal)
         self.accuracy_bar.setRange(30, 90)
         self.accuracy_bar.valueChanged.connect(
             self.make_setting_slider_event(
@@ -195,8 +194,8 @@ class MineFishGUI(QWidget):
         # Detection Delay
         self.detection_title = QLabel('Detection Delay')
         self.detection_value = QLabel()
-        self.detection_value.setAlignment(Qt.AlignCenter)
-        self.detection_bar = QSlider(Qt.Horizontal)
+        self.detection_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.detection_bar = QSlider(Qt.Orientation.Horizontal)
         self.detection_bar.setRange(10, 50)
         self.detection_bar.valueChanged.connect(
             self.make_setting_slider_event(
@@ -210,8 +209,8 @@ class MineFishGUI(QWidget):
         # Throwing Delay
         self.throwing_title = QLabel('Throwing Delay')
         self.throwing_value = QLabel()
-        self.throwing_value.setAlignment(Qt.AlignCenter)
-        self.throwing_bar = QSlider(Qt.Horizontal)
+        self.throwing_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.throwing_bar = QSlider(Qt.Orientation.Horizontal)
         self.throwing_bar.setRange(30, 500)
         self.throwing_bar.valueChanged.connect(
             self.make_setting_slider_event(
@@ -241,8 +240,8 @@ class MineFishGUI(QWidget):
         # Frequency
         self.frequency_title = QLabel('Frequency')
         self.frequency_value = QLabel()
-        self.frequency_value.setAlignment(Qt.AlignCenter)
-        self.frequency_bar = QSlider(Qt.Horizontal)
+        self.frequency_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.frequency_bar = QSlider(Qt.Orientation.Horizontal)
         self.frequency_bar.setRange(10, 100)
         self.frequency_bar.valueChanged.connect(
             self.make_setting_slider_event(
@@ -256,8 +255,8 @@ class MineFishGUI(QWidget):
         # Min Scale
         self.min_scale_title = QLabel('Min Scale')
         self.min_scale_value = QLabel()
-        self.min_scale_value.setAlignment(Qt.AlignCenter)
-        self.min_scale_bar = QSlider(Qt.Horizontal)
+        self.min_scale_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.min_scale_bar = QSlider(Qt.Orientation.Horizontal)
         self.min_scale_bar.setRange(10, 80)
         self.min_scale_bar.valueChanged.connect(
             self.make_setting_slider_event(
@@ -271,8 +270,8 @@ class MineFishGUI(QWidget):
         # Max Scale
         self.max_scale_title = QLabel('Max Scale')
         self.max_scale_value = QLabel()
-        self.max_scale_value.setAlignment(Qt.AlignCenter)
-        self.max_scale_bar = QSlider(Qt.Horizontal)
+        self.max_scale_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.max_scale_bar = QSlider(Qt.Orientation.Horizontal)
         self.max_scale_bar.setRange(90, 250)
         self.max_scale_bar.valueChanged.connect(
             self.make_setting_slider_event(
@@ -298,7 +297,7 @@ class MineFishGUI(QWidget):
 
         return advanced_box
 
-    def make_setting_slider_event(self, value_display: QLabel, key: str, scale: int, value_type: 'class') -> 'function':
+    def make_setting_slider_event(self, value_display: QLabel, key: str, scale: int, value_type: 'function') -> 'function':
         def setting_slider_event(value: int) -> None:
             new_value = value_type(value / scale)
             value_display.setText(str(new_value))
@@ -334,7 +333,7 @@ class MineFishGUI(QWidget):
         pass
 
     def set_combobox_item(self, combobox: QComboBox, text: str) -> None:
-        index = combobox.findText(text, Qt.MatchFixedString)
+        index = combobox.findText(text, Qt.MatchFlag.MatchFixedString)
         if index >= 0:
             combobox.setCurrentIndex(index)
 
@@ -419,4 +418,4 @@ class MineFishGUI(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MineFishGUI()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
