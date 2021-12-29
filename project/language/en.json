@@ -1,0 +1,48 @@
+{
+    "metadata": {
+        "type": "en",
+        "language": "English",
+        "language_version": "4.0.0",
+        "last_modified": "Thursday, December 30, 2021 at 01:04 AM. (KST)",
+        "contributors": [
+            {
+                "name": "Nitro",
+                "github": "Nitro1231"
+            }
+        ]
+    },
+    "tabs": {
+        "preview": "Preview",
+        "setting": "Setting",
+        "about": "About"
+    },
+    "preview_tab": {
+        "capturing_label": "Searching for the Minecraft window...",
+        "active_toggle": "Active",
+        "target_label": "Target Image",
+        "capture_label": "Captured Image"
+    },
+    "setting_tab": {
+        "target_image_title": "Target Image",
+        "target_image_dialog_button": "Select File",
+        "target_image_folder_button": "Open Folder",
+        "language_title": "Display Language",
+        "refresh_button": "Refresh",
+        "reset_button": "Reset Setting",
+        "accuracy_title": "Detection Accuracy",
+        "detection_title": "Detection Delay",
+        "throwing_title": "Throwing Delay",
+        "frequency_title": "Image Detection Frequency",
+        "min_scale_title": "Target Image Min Scale",
+        "max_scale_title": "Target Image Max Scale"
+    },
+    "about_tab": {
+        "update_state_label": {
+            "newest": "You're up to date.",
+            "available": "A new update is available.", 
+            "checking": "Checking for the new update...",
+            "failed": "Update check failed."
+        },
+        "text_label": "Thank you for using MineFish. You are always welcome to give us any feedback or share amazing ideas about MineFish. Feel free to join my Discord Server! Thank you :)"
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "metadata": {
+        "type": "kr",
+        "language": "Korean (한국어)",
+        "language_version": "4.0.0",
+        "last_modified": "Thursday, December 30, 2021 at 01:09 AM. (KST)",
+        "contributors": [
+            {
+                "name": "Nitro",
+                "github": "Nitro1231"
+            }
+        ]
+    },
+    "tabs": {
+        "preview": "프리뷰",
+        "setting": "설정",
+        "about": "정보"
+    },
+    "preview_tab": {
+        "capturing_label": "마인크래프트 창을 찾는중...",
+        "active_toggle": "활성화",
+        "target_label": "타겟 이미지",
+        "capture_label": "캡처된 이미지"
+    },
+    "setting_tab": {
+        "target_image_title": "타겟 이미지",
+        "target_image_dialog_button": "파일 선택",
+        "target_image_folder_button": "폴더 열기",
+        "language_title": "언어",
+        "refresh_button": "새로고침",
+        "reset_button": "설정 초기화",
+        "accuracy_title": "감지 정확도",
+        "detection_title": "감지 딜레이",
+        "throwing_title": "정확도 딜레이",
+        "frequency_title": "이미지 감지 빈도수",
+        "min_scale_title": "최소 타겟 이미지 사이즈",
+        "max_scale_title": "최대 타겟 이미지 사이즈"
+    },
+    "about_tab": {
+        "update_state_label": {
+            "newest": "최신 버전 입니다.",
+            "available": "새로운 업데이트가 있습니다.", 
+            "checking": "새 업데이트를 확인하는 중 입니다...",
+            "failed": "업데이트 확인에 실패했습니다."
+        },
+        "text_label": "MineFish를 이용해 주셔서 감사합니다. 사용에 불편한 점이 있거나, 새로운 아이디어가 있다면 디스코드 서버에 가입하여 공유해주세요! 감사합니다 :)"
+    }
+}

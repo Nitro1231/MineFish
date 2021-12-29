@@ -8,7 +8,7 @@
 # GitHub: https://github.com/Nitro1231/MineFish
 #
 # Version: 4.0.0
-# Last Modified: Monday, December 6, 2021 at 11:11 AM. (PDT)
+# Last Modified: Thursday, December 30, 2021 at 12:54 AM. (KST)
 #
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 import os
 import sys
+import json
 import minefish
 import pyautogui
 import webbrowser
@@ -47,12 +48,12 @@ LANGUAGE_PATH = '.\\language'
 ICON_PATH = '.\\resources\\icon.png'
 LOGO_PATH = '.\\resources\\MineFish.png'
 INITIAL_SETTING = {
-    "accuracy": 0.7,
-   	"detection_delay": 0.3,
-   	"throwing_delay": 0.5,
-   	"frequency": 40,
-   	"min_scale": 0.5,
-   	"max_scale": 2.0
+    'accuracy': 0.7,
+   	'detection_delay': 0.3,
+   	'throwing_delay': 0.5,
+   	'frequency': 40,
+   	'min_scale': 0.5,
+   	'max_scale': 2.0
 }
 
 class MineFishGUI(QWidget):
@@ -74,13 +75,13 @@ class MineFishGUI(QWidget):
         setting_tab = self.initialize_setting_tab()
         about_tab = self.initialize_about_tab()
 
-        main_tabs = QTabWidget()
-        main_tabs.addTab(preview_tab, 'Preview')
-        main_tabs.addTab(setting_tab, 'Setting')
-        main_tabs.addTab(about_tab, 'About')
+        self.main_tabs = QTabWidget()
+        self.main_tabs.addTab(preview_tab, 'preview')
+        self.main_tabs.addTab(setting_tab, 'setting')
+        self.main_tabs.addTab(about_tab, 'about')
 
         box_layout = QVBoxLayout()
-        box_layout.addWidget(main_tabs)
+        box_layout.addWidget(self.main_tabs)
 
         self.setLayout(box_layout)
         self.setWindowTitle('MineFish')
@@ -91,17 +92,17 @@ class MineFishGUI(QWidget):
     def initialize_preview_tab(self) -> QWidget:
         preview_tab = QWidget()
 
-        self.capturing_label = QLabel('Searching for the Minecraft window...')
+        self.capturing_label = QLabel('capturing_label')
         self.capturing_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.active_toggle = QCheckBox('Active')
+        self.active_toggle = QCheckBox('active_toggle')
         self.active_toggle.setChecked(False)
         self.active_toggle.stateChanged.connect(self.set_preview_active)
 
-        self.target_label = QLabel('Target Image')
+        self.target_label = QLabel('target_label')
         self.target_image = QLabel()
 
-        self.capture_label = QLabel('Captured Image')
+        self.capture_label = QLabel('capture_label')
         self.capture_image = QLabel()
 
         box_layout = QVBoxLayout()
@@ -136,11 +137,11 @@ class MineFishGUI(QWidget):
         setting_tab = QWidget()
 
         # Target Image
-        self.target_image_title = QLabel('Target Image')
+        self.target_image_title = QLabel('target_image_title')
         self.target_image_list = QComboBox()
         self.target_image_list.activated.connect(self.setting_combobox_item_change_event)
-        self.target_image_dialog_button = QPushButton('Open File')
-        self.target_image_folder_button = QPushButton('Open Folder')
+        self.target_image_dialog_button = QPushButton('target_image_dialog_button')
+        self.target_image_folder_button = QPushButton('target_image_folder_button')
 
         target_image_box_layout = QGridLayout()
         target_image_box_layout.addWidget(self.target_image_title, 0, 0)
@@ -149,7 +150,7 @@ class MineFishGUI(QWidget):
         target_image_box_layout.addWidget(self.target_image_folder_button, 1, 10, 1, 1)
 
         # Display Language
-        self.language_title = QLabel('Display Language')
+        self.language_title = QLabel('language_title')
         self.language_list = QComboBox()
         self.language_list.activated.connect(self.setting_combobox_item_change_event)
 
@@ -157,10 +158,10 @@ class MineFishGUI(QWidget):
         slider_grid.addLayout(self.initialize_normal_setting_box(), 0, 0)
         slider_grid.addLayout(self.initialize_advanced_setting_box(), 0, 1)
 
-        self.refresh_button = QPushButton('Refresh')
+        self.refresh_button = QPushButton('refresh_button')
         self.refresh_button.clicked.connect(self.load_resources)
 
-        self.reset_button = QPushButton('Reset Setting')
+        self.reset_button = QPushButton('reset_button')
         self.reset_button.clicked.connect(self.reset_setting)
 
         toolbar_layout = QHBoxLayout()
@@ -182,7 +183,7 @@ class MineFishGUI(QWidget):
 
     def initialize_normal_setting_box(self) -> QVBoxLayout:
         # Accuracy
-        self.accuracy_title = QLabel('Accuracy')
+        self.accuracy_title = QLabel('accuracy_title')
         self.accuracy_value = QLabel()
         self.accuracy_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.accuracy_bar = QSlider(Qt.Orientation.Horizontal)
@@ -197,7 +198,7 @@ class MineFishGUI(QWidget):
         )
 
         # Detection Delay
-        self.detection_title = QLabel('Detection Delay')
+        self.detection_title = QLabel('detection_title')
         self.detection_value = QLabel()
         self.detection_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.detection_bar = QSlider(Qt.Orientation.Horizontal)
@@ -212,7 +213,7 @@ class MineFishGUI(QWidget):
         )
 
         # Throwing Delay
-        self.throwing_title = QLabel('Throwing Delay')
+        self.throwing_title = QLabel('throwing_title')
         self.throwing_value = QLabel()
         self.throwing_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.throwing_bar = QSlider(Qt.Orientation.Horizontal)
@@ -243,7 +244,7 @@ class MineFishGUI(QWidget):
 
     def initialize_advanced_setting_box(self) -> QVBoxLayout:
         # Frequency
-        self.frequency_title = QLabel('Frequency')
+        self.frequency_title = QLabel('frequency_title')
         self.frequency_value = QLabel()
         self.frequency_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.frequency_bar = QSlider(Qt.Orientation.Horizontal)
@@ -258,7 +259,7 @@ class MineFishGUI(QWidget):
         )
 
         # Min Scale
-        self.min_scale_title = QLabel('Min Scale')
+        self.min_scale_title = QLabel('min_scale_title')
         self.min_scale_value = QLabel()
         self.min_scale_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.min_scale_bar = QSlider(Qt.Orientation.Horizontal)
@@ -273,7 +274,7 @@ class MineFishGUI(QWidget):
         )
 
         # Max Scale
-        self.max_scale_title = QLabel('Max Scale')
+        self.max_scale_title = QLabel('max_scale_title')
         self.max_scale_value = QLabel()
         self.max_scale_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.max_scale_bar = QSlider(Qt.Orientation.Horizontal)
@@ -315,6 +316,7 @@ class MineFishGUI(QWidget):
         self.minefish.setting['display_language'] = self.language_list.currentText()
         self.minefish.save_setting()
         self.load_resources()
+        self.load_language()
 
     def initialize_about_tab(self) -> QWidget:
         about_tab = QWidget()
@@ -332,14 +334,10 @@ class MineFishGUI(QWidget):
         gitHub_layout = self.create_clickable_label('GitHub:', 'https://github.com/Nitro1231/MineFish', 'https://github.com/Nitro1231/MineFish')
         version_layout = self.create_clickable_label('Version:', VERSION, 'https://github.com/Nitro1231/MineFish/releases')
 
-        update_state_label = QLabel('Checking for a new update...')
-        # You're up to date.
-        # New version available.
-        # Checking for a new update...
-        # Update check failed.
+        self.update_state_label = QLabel('Checking for a new update...')
 
-        text_label = QLabel('Thank you for using MineFish. You are always welcome to give us any feedback or share amazing ideas about MineFish. Feel free to join my Discord Server! Thank you :)')
-        text_label.setWordWrap(True)
+        self.text_label = QLabel('Thank you for using MineFish. You are always welcome to give us any feedback or share amazing ideas about MineFish. Feel free to join my Discord Server! Thank you :)')
+        self.text_label.setWordWrap(True)
 
         box_layout = QVBoxLayout()
         box_layout.addWidget(logo_image)
@@ -349,8 +347,8 @@ class MineFishGUI(QWidget):
         box_layout.addLayout(discord_layout)
         box_layout.addLayout(gitHub_layout)
         box_layout.addLayout(version_layout)
-        box_layout.addWidget(update_state_label)
-        box_layout.addWidget(text_label)
+        box_layout.addWidget(self.update_state_label)
+        box_layout.addWidget(self.text_label)
         box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         about_tab.setLayout(box_layout)
 
@@ -392,7 +390,41 @@ class MineFishGUI(QWidget):
         self.max_scale_bar.setValue(int(self.minefish.setting['max_scale'] * 100))
 
     def load_language(self) -> None:
-        pass
+        with open(self.minefish.setting['display_language'], 'r', encoding='utf-8') as f:
+            lang = json.load(f)
+
+        # main_tabs
+        self.main_tabs.setTabText(0, lang['tabs']['preview'])
+        self.main_tabs.setTabText(1, lang['tabs']['setting'])
+        self.main_tabs.setTabText(2, lang['tabs']['about'])
+
+        # preview_tab
+        self.capturing_label.setText(lang['preview_tab']['capturing_label'])
+        self.active_toggle.setText(lang['preview_tab']['active_toggle'])
+        self.target_label.setText(lang['preview_tab']['target_label'])
+        self.capture_label.setText(lang['preview_tab']['capture_label'])
+
+        # setting_tab
+        self.target_image_title.setText(lang['setting_tab']['target_image_title'])
+        self.target_image_dialog_button.setText(lang['setting_tab']['target_image_dialog_button'])
+        self.target_image_folder_button.setText(lang['setting_tab']['target_image_folder_button'])
+        self.language_title.setText(lang['setting_tab']['language_title'])
+        self.refresh_button.setText(lang['setting_tab']['refresh_button'])
+        self.reset_button.setText(lang['setting_tab']['reset_button'])
+
+        # normal_setting_box
+        self.accuracy_title.setText(lang['setting_tab']['accuracy_title'])
+        self.detection_title.setText(lang['setting_tab']['detection_title'])
+        self.throwing_title.setText(lang['setting_tab']['throwing_title'])
+
+        # advanced_setting_box
+        self.frequency_title.setText(lang['setting_tab']['frequency_title'])
+        self.min_scale_title.setText(lang['setting_tab']['min_scale_title'])
+        self.max_scale_title.setText(lang['setting_tab']['max_scale_title'])
+
+        # about_tab
+        self.update_state_label.setText(lang['about_tab']['update_state_label']['checking'])
+        self.text_label.setText(lang['about_tab']['text_label'])
 
     def set_combobox_item(self, combobox: QComboBox, text: str) -> None:
         index = combobox.findText(text, Qt.MatchFlag.MatchFixedString)
