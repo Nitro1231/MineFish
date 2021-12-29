@@ -19,9 +19,10 @@ import os
 import sys
 import minefish
 import pyautogui
+import webbrowser
 import pygetwindow
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtGui import QImage, QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -37,10 +38,14 @@ from PyQt6.QtWidgets import (
 )
 from qt_material import apply_stylesheet
 
+VERSION = '4.0.0'
+
 WIDTH = 600
 HEIGHT = 400
-IMAGE_PATH = './image'
-LANGUAGE_PATH = './language'
+IMAGE_PATH = '.\\image'
+LANGUAGE_PATH = '.\\language'
+ICON_PATH = '.\\resources\\icon.png'
+LOGO_PATH = '.\\resources\\MineFish.png'
 INITIAL_SETTING = {
     "accuracy": 0.7,
    	"detection_delay": 0.3,
@@ -67,7 +72,7 @@ class MineFishGUI(QWidget):
 
         preview_tab = self.initialize_preview_tab()
         setting_tab = self.initialize_setting_tab()
-        about_tab = QWidget()
+        about_tab = self.initialize_about_tab()
 
         main_tabs = QTabWidget()
         main_tabs.addTab(preview_tab, 'Preview')
@@ -79,6 +84,7 @@ class MineFishGUI(QWidget):
 
         self.setLayout(box_layout)
         self.setWindowTitle('MineFish')
+        self.setWindowIcon(QIcon(ICON_PATH))
         self.setGeometry(300, 300, WIDTH, HEIGHT)
         self.show()
 
@@ -170,7 +176,6 @@ class MineFishGUI(QWidget):
         box_layout.addLayout(slider_grid)
         box_layout.addStretch(1)
         box_layout.addLayout(toolbar_layout)
-
         setting_tab.setLayout(box_layout)
 
         return setting_tab
@@ -183,7 +188,7 @@ class MineFishGUI(QWidget):
         self.accuracy_bar = QSlider(Qt.Orientation.Horizontal)
         self.accuracy_bar.setRange(30, 90)
         self.accuracy_bar.valueChanged.connect(
-            self.make_setting_slider_event(
+            self.create_setting_slider_event(
                 value_display=self.accuracy_value,
                 key='accuracy',
                 scale=100,
@@ -198,7 +203,7 @@ class MineFishGUI(QWidget):
         self.detection_bar = QSlider(Qt.Orientation.Horizontal)
         self.detection_bar.setRange(10, 50)
         self.detection_bar.valueChanged.connect(
-            self.make_setting_slider_event(
+            self.create_setting_slider_event(
                 value_display=self.detection_value,
                 key='detection_delay',
                 scale=100,
@@ -213,7 +218,7 @@ class MineFishGUI(QWidget):
         self.throwing_bar = QSlider(Qt.Orientation.Horizontal)
         self.throwing_bar.setRange(30, 500)
         self.throwing_bar.valueChanged.connect(
-            self.make_setting_slider_event(
+            self.create_setting_slider_event(
                 value_display=self.throwing_value,
                 key='throwing_delay',
                 scale=100,
@@ -244,7 +249,7 @@ class MineFishGUI(QWidget):
         self.frequency_bar = QSlider(Qt.Orientation.Horizontal)
         self.frequency_bar.setRange(10, 100)
         self.frequency_bar.valueChanged.connect(
-            self.make_setting_slider_event(
+            self.create_setting_slider_event(
                 value_display=self.frequency_value,
                 key='frequency',
                 scale=1,
@@ -259,7 +264,7 @@ class MineFishGUI(QWidget):
         self.min_scale_bar = QSlider(Qt.Orientation.Horizontal)
         self.min_scale_bar.setRange(10, 80)
         self.min_scale_bar.valueChanged.connect(
-            self.make_setting_slider_event(
+            self.create_setting_slider_event(
                 value_display=self.min_scale_value,
                 key='min_scale',
                 scale=100,
@@ -274,7 +279,7 @@ class MineFishGUI(QWidget):
         self.max_scale_bar = QSlider(Qt.Orientation.Horizontal)
         self.max_scale_bar.setRange(90, 250)
         self.max_scale_bar.valueChanged.connect(
-            self.make_setting_slider_event(
+            self.create_setting_slider_event(
                 value_display=self.max_scale_value,
                 key='max_scale',
                 scale=100,
@@ -297,7 +302,7 @@ class MineFishGUI(QWidget):
 
         return advanced_box
 
-    def make_setting_slider_event(self, value_display: QLabel, key: str, scale: int, value_type: 'function') -> 'function':
+    def create_setting_slider_event(self, value_display: QLabel, key: str, scale: int, value_type: 'function') -> 'function':
         def setting_slider_event(value: int) -> None:
             new_value = value_type(value / scale)
             value_display.setText(str(new_value))
@@ -310,6 +315,63 @@ class MineFishGUI(QWidget):
         self.minefish.setting['display_language'] = self.language_list.currentText()
         self.minefish.save_setting()
         self.load_resources()
+
+    def initialize_about_tab(self) -> QWidget:
+        about_tab = QWidget()
+
+        logo_image = QLabel()
+        logo_pixmap = QPixmap(LOGO_PATH)
+        logo_image.setPixmap(logo_pixmap)
+        logo_image.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        copyright_label = QLabel('Copyright 2020 Nitro. All Rights Reserved.')
+
+        developer_layout = self.create_clickable_label('Developer:', 'Nitro (admin@nitrostudio.dev)', 'mailto:admin@nitrostudio.dev')
+        blog_layout = self.create_clickable_label('Blog:', 'https://blog.nitrostudio.dev', 'https://blog.nitrostudio.dev')
+        discord_layout = self.create_clickable_label('Discord:', 'https://discord.gg/sgSgVtC', 'https://discord.gg/sgSgVtC')
+        gitHub_layout = self.create_clickable_label('GitHub:', 'https://github.com/Nitro1231/MineFish', 'https://github.com/Nitro1231/MineFish')
+        version_layout = self.create_clickable_label('Version:', VERSION, 'https://github.com/Nitro1231/MineFish/releases')
+
+        update_state_label = QLabel('Checking for a new update...')
+        # You're up to date.
+        # New version available.
+        # Checking for a new update...
+        # Update check failed.
+
+        text_label = QLabel('Thank you for using MineFish. You are always welcome to give us any feedback or share amazing ideas about MineFish. Feel free to join my Discord Server! Thank you :)')
+        text_label.setWordWrap(True)
+
+        box_layout = QVBoxLayout()
+        box_layout.addWidget(logo_image)
+        box_layout.addWidget(copyright_label)
+        box_layout.addLayout(developer_layout)
+        box_layout.addLayout(blog_layout)
+        box_layout.addLayout(discord_layout)
+        box_layout.addLayout(gitHub_layout)
+        box_layout.addLayout(version_layout)
+        box_layout.addWidget(update_state_label)
+        box_layout.addWidget(text_label)
+        box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        about_tab.setLayout(box_layout)
+
+        return about_tab
+
+    def create_clickable_label(self, name: str, value: str, link: str) -> QHBoxLayout:
+        box_layout = QHBoxLayout()
+        name_label = QLabel(name)
+        value_label = QLabel(value)
+        value_label.setStyleSheet('color: #8bc34a')
+
+        def open_link(event):
+            webbrowser.open(link)
+        
+        value_label.mousePressEvent = open_link
+
+        box_layout.addWidget(name_label)
+        box_layout.addWidget(value_label)
+        box_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        return box_layout
 
     def load_resources(self) -> None:
         self.minefish.load_setting()
@@ -359,6 +421,7 @@ class MineFishGUI(QWidget):
     def search_window_timer_event(self) -> None:
         self.minefish.select_matched_window()
         if self.minefish.game_window != None:
+            self.active_toggle.setCheckState(Qt.CheckState.Checked)
             self.set_preview_visibility(True)
             self.search_window_timer.stop()
 
@@ -378,8 +441,7 @@ class MineFishGUI(QWidget):
             if detected:
                 self.throw_rod()
         except pygetwindow.PyGetWindowException:
-            self.active_toggle.setCheckState(False)
-            self.set_preview_visibility(False)
+            self.active_toggle.setCheckState(Qt.CheckState.Unchecked)
             self.search_window()
 
     def throw_rod(self) -> None:
@@ -410,7 +472,7 @@ class MineFishGUI(QWidget):
         bytesPerLine = 3 * width
         qimg = QImage(
             image.data, width, height,
-            bytesPerLine, QImage.Format_RGB888
+            bytesPerLine, QImage.Format.Format_RGB888
         )
         return QPixmap.fromImage(qimg)
 

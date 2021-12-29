@@ -20,11 +20,11 @@ import pyautogui
 import pygetwindow
 import numpy as np
 
-SETTING_PATH = './setting.json'
+SETTING_PATH = '.\\setting.json'
 MATCHED_COLOR = (196, 229, 56)
 MATCH_LIST = {
-    'include': ['Minecraft', '.'],  # '.'
-    'exclude': ['Launcher', 'Updater', 'MineFish']  # Launcher
+    'include': ['Minecraft'],  # '.'
+    'exclude': ['Updater', 'MineFish']  # Launcher
 }
 
 
