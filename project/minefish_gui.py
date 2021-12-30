@@ -71,6 +71,8 @@ class MineFishGUI(QWidget):
         self.search_window()
         self.show()
 
+# region Initialize UI
+
     def initialize_ui(self) -> None:
         apply_stylesheet(self, theme='dark_lightgreen.xml')
 
@@ -384,6 +386,68 @@ class MineFishGUI(QWidget):
 
         return box_layout
 
+# endregion
+
+# region Timer
+
+    def search_window(self) -> None:
+        self.set_preview_visibility(False)
+        self.search_window_timer = self.make_timer(500, self.search_window_timer_event)
+        self.search_window_timer.start()
+
+    def search_window_timer_event(self) -> None:
+        self.minefish.select_matched_window()
+        if self.minefish.game_window != None:
+            self.active_toggle.setCheckState(Qt.CheckState.Checked)
+            self.set_preview_visibility(True)
+            self.search_window_timer.stop()
+
+    def detect(self, state: bool) -> None:
+        interval = int(self.minefish.setting['detection_delay'] * 1000)
+        self.detect_timer = self.make_timer(interval, self.detect_timer_event)
+
+        if state:
+            self.detect_timer.start()
+        else:
+            self.detect_timer.stop()
+
+    def detect_timer_event(self) -> None:
+        try:
+            detected, org_image = self.minefish.detect()
+            self.capture_image.setPixmap(self.to_pixmap(org_image))
+            if detected:
+                self.throw_rod()
+        except pygetwindow.PyGetWindowException:
+            self.active_toggle.setCheckState(Qt.CheckState.Unchecked)
+            self.search_window()
+
+    def throw_rod(self) -> None:
+        self.detect_timer.stop()
+        pyautogui.click(button='right')
+        interval = int(self.minefish.setting['throwing_delay'] * 1000)
+        self.throw_timer = self.make_timer(interval, self.throw_timer_event)
+        self.throw_timer.start()
+
+    def throw_timer_event(self) -> None:
+        pyautogui.click(button='right')
+        self.delay_timer = self.make_timer(4000, self.delay_timer_event)
+        self.delay_timer.start()
+        self.throw_timer.stop()
+
+    def delay_timer_event(self) -> None:
+        self.detect_timer.start()
+        self.delay_timer.stop()
+
+    def make_timer(self, interval: int, event: 'function') -> QTimer:
+        timer = QTimer()
+        timer.setInterval(interval)
+        timer.timeout.connect(event)
+        return timer
+
+# endregion
+
+# region Extra Functionalities
+
     def load_resources(self) -> None:
         self.minefish.load_setting()
         self.minefish.load_target_image()
@@ -458,60 +522,6 @@ class MineFishGUI(QWidget):
         self.minefish.save_setting()
         self.load_resources()
 
-    def search_window(self) -> None:
-        self.set_preview_visibility(False)
-        self.search_window_timer = self.make_timer(500, self.search_window_timer_event)
-        self.search_window_timer.start()
-
-    def search_window_timer_event(self) -> None:
-        self.minefish.select_matched_window()
-        if self.minefish.game_window != None:
-            self.active_toggle.setCheckState(Qt.CheckState.Checked)
-            self.set_preview_visibility(True)
-            self.search_window_timer.stop()
-
-    def detect(self, state: bool) -> None:
-        interval = int(self.minefish.setting['detection_delay'] * 1000)
-        self.detect_timer = self.make_timer(interval, self.detect_timer_event)
-
-        if state:
-            self.detect_timer.start()
-        else:
-            self.detect_timer.stop()
-
-    def detect_timer_event(self) -> None:
-        try:
-            detected, org_image = self.minefish.detect()
-            self.capture_image.setPixmap(self.to_pixmap(org_image))
-            if detected:
-                self.throw_rod()
-        except pygetwindow.PyGetWindowException:
-            self.active_toggle.setCheckState(Qt.CheckState.Unchecked)
-            self.search_window()
-
-    def throw_rod(self) -> None:
-        self.detect_timer.stop()
-        pyautogui.click(button='right')
-        interval = int(self.minefish.setting['throwing_delay'] * 1000)
-        self.throw_timer = self.make_timer(interval, self.throw_timer_event)
-        self.throw_timer.start()
-
-    def throw_timer_event(self) -> None:
-        pyautogui.click(button='right')
-        self.delay_timer = self.make_timer(4000, self.delay_timer_event)
-        self.delay_timer.start()
-        self.throw_timer.stop()
-
-    def delay_timer_event(self) -> None:
-        self.detect_timer.start()
-        self.delay_timer.stop()
-
-    def make_timer(self, interval: int, event: 'function') -> QTimer:
-        timer = QTimer()
-        timer.setInterval(interval)
-        timer.timeout.connect(event)
-        return timer
-
     def to_pixmap(self, image) -> QPixmap:
         height, width, channel = image.shape
         bytesPerLine = 3 * width
@@ -521,6 +531,7 @@ class MineFishGUI(QWidget):
         )
         return QPixmap.fromImage(qimg)
 
+# endregion
 
 if __name__ == '__main__':
     # try:
