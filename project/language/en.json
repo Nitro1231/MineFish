@@ -3,7 +3,7 @@
         "type": "en",
         "language": "English",
         "language_version": "4.0.0",
-        "last_modified": "Thursday, December 30, 2021 at 01:04 AM. (KST)",
+        "last_modified": "Thursday, December 30, 2021 at 01:40 AM. (KST)",
         "contributors": [
             {
                 "name": "Nitro",
@@ -24,7 +24,7 @@
     },
     "setting_tab": {
         "target_image_title": "Target Image",
-        "target_image_dialog_button": "Select File",
+        "target_image_dialog_button": "Add File",
         "target_image_folder_button": "Open Folder",
         "language_title": "Display Language",
         "refresh_button": "Refresh",

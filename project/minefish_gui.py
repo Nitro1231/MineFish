@@ -22,6 +22,7 @@ import minefish
 import pyautogui
 import webbrowser
 import pygetwindow
+from shutil import copyfile
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QImage, QPixmap, QIcon
 from PyQt6.QtWidgets import (
@@ -35,7 +36,8 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QCheckBox,
     QComboBox,
-    QSlider
+    QSlider,
+    QFileDialog
 )
 from qt_material import apply_stylesheet
 
@@ -67,6 +69,7 @@ class MineFishGUI(QWidget):
         self.load_language()
 
         self.search_window()
+        self.show()
 
     def initialize_ui(self) -> None:
         apply_stylesheet(self, theme='dark_lightgreen.xml')
@@ -87,7 +90,6 @@ class MineFishGUI(QWidget):
         self.setWindowTitle('MineFish')
         self.setWindowIcon(QIcon(ICON_PATH))
         self.setGeometry(300, 300, WIDTH, HEIGHT)
-        self.show()
 
     def initialize_preview_tab(self) -> QWidget:
         preview_tab = QWidget()
@@ -141,7 +143,9 @@ class MineFishGUI(QWidget):
         self.target_image_list = QComboBox()
         self.target_image_list.activated.connect(self.setting_combobox_item_change_event)
         self.target_image_dialog_button = QPushButton('target_image_dialog_button')
+        self.target_image_dialog_button.clicked.connect(self.target_image_add_file_dialog)
         self.target_image_folder_button = QPushButton('target_image_folder_button')
+        self.target_image_folder_button.clicked.connect(self.target_image_open_folder)
 
         target_image_box_layout = QGridLayout()
         target_image_box_layout.addWidget(self.target_image_title, 0, 0)
@@ -317,6 +321,15 @@ class MineFishGUI(QWidget):
         self.minefish.save_setting()
         self.load_resources()
         self.load_language()
+
+    def target_image_add_file_dialog(self) -> None:
+        new_image_path = QFileDialog.getOpenFileName(self, 'Add File', './')[0]
+        image_name = os.path.basename(new_image_path)
+        copyfile(new_image_path, f'{IMAGE_PATH}\\{image_name}')
+        self.load_resources()
+
+    def target_image_open_folder(self) -> None:
+        os.startfile(IMAGE_PATH)
 
     def initialize_about_tab(self) -> QWidget:
         about_tab = QWidget()
@@ -510,6 +523,8 @@ class MineFishGUI(QWidget):
 
 
 if __name__ == '__main__':
+    # try:
     app = QApplication(sys.argv)
     ex = MineFishGUI()
     sys.exit(app.exec())
+    # except Exception as e:
