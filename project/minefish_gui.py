@@ -93,6 +93,8 @@ class MineFishGUI(QWidget):
         self.setWindowIcon(QIcon(ICON_PATH))
         self.setGeometry(300, 300, WIDTH, HEIGHT)
 
+    # region Initialize Preview Tab
+
     def initialize_preview_tab(self) -> QWidget:
         preview_tab = QWidget()
 
@@ -136,6 +138,10 @@ class MineFishGUI(QWidget):
         self.capture_label.setVisible(state)
         self.capture_image.setVisible(state)
         self.capturing_label.setVisible(not state)
+
+    # endregion
+
+    # region Initialize Setting Tab
 
     def initialize_setting_tab(self) -> QWidget:
         setting_tab = QWidget()
@@ -333,6 +339,10 @@ class MineFishGUI(QWidget):
     def target_image_open_folder(self) -> None:
         os.startfile(IMAGE_PATH)
 
+    # endregion
+
+    # region Initialize About Tab
+
     def initialize_about_tab(self) -> QWidget:
         about_tab = QWidget()
 
@@ -345,7 +355,7 @@ class MineFishGUI(QWidget):
 
         developer_layout = self.create_clickable_label('Developer:', 'Nitro (admin@nitrostudio.dev)', 'mailto:admin@nitrostudio.dev')
         blog_layout = self.create_clickable_label('Blog:', 'https://blog.nitrostudio.dev', 'https://blog.nitrostudio.dev')
-        discord_layout = self.create_clickable_label('Discord:', 'https://discord.gg/sgSgVtC', 'https://discord.gg/sgSgVtC')
+        discord_layout = self.create_clickable_label('Discord:', 'https://discord.nitrostudio.dev', 'https://discord.nitrostudio.dev')
         gitHub_layout = self.create_clickable_label('GitHub:', 'https://github.com/Nitro1231/MineFish', 'https://github.com/Nitro1231/MineFish')
         version_layout = self.create_clickable_label('Version:', VERSION, 'https://github.com/Nitro1231/MineFish/releases')
 
@@ -385,6 +395,8 @@ class MineFishGUI(QWidget):
         box_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         return box_layout
+
+    # endregion
 
 # endregion
 

@@ -82,7 +82,7 @@ class MineFish():
 
         return include and exclude
 
-    def _get_window_size(self, handle: 'Win32Window') -> tuple():
+    def _get_window_size(self, handle: pygetwindow.Win32Window) -> tuple():
         left, top = handle.left, handle.top
         width, height = handle.width, handle.height
         return left, top, width, height
