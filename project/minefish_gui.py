@@ -15,6 +15,7 @@
 
 # https://wikidocs.net/21849
 
+
 import os
 import sys
 import json
@@ -41,6 +42,7 @@ from PyQt6.QtWidgets import (
 )
 from qt_material import apply_stylesheet
 
+
 VERSION = '4.0.0'
 
 WIDTH = 600
@@ -57,6 +59,7 @@ INITIAL_SETTING = {
    	'min_scale': 0.5,
    	'max_scale': 2.0
 }
+
 
 class MineFishGUI(QWidget):
     def __init__(self) -> None:
@@ -545,9 +548,41 @@ class MineFishGUI(QWidget):
 
 # endregion
 
+
+class UpdateGUI(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initialize_ui()
+        self.show()
+    
+    def initialize_ui(self) -> None:
+        apply_stylesheet(self, theme='dark_lightgreen.xml')
+
+        update_label = QLabel('Update Available')
+        update_label.setStyleSheet('font-size: 18pt; font-weight: bold; color: #8bc34a')
+        version_label = QLabel('Version: 4.0.1')
+        release_date_label = QLabel('Release Date: 2022/09/08')
+        url_label = QLabel('https://github.com/Nitro1231/MineFish/releases')
+        description_label = QLabel('description')
+
+        box_layout = QVBoxLayout()
+        box_layout.addWidget(update_label)
+        box_layout.addWidget(version_label)
+        box_layout.addWidget(release_date_label)
+        box_layout.addWidget(url_label)
+        box_layout.addWidget(description_label)
+        box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.setLayout(box_layout)
+        self.setWindowTitle('MineFish')
+        self.setWindowIcon(QIcon(ICON_PATH))
+
+
+
 if __name__ == '__main__':
     # try:
     app = QApplication(sys.argv)
     ex = MineFishGUI()
+    ex1 = UpdateGUI()
     sys.exit(app.exec())
     # except Exception as e:

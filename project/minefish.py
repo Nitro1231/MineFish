@@ -13,12 +13,14 @@
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
 
+
 import cv2
 import json
 import imutils
 import pyautogui
 import pygetwindow
 import numpy as np
+
 
 SETTING_PATH = '.\\setting.json'
 MATCHED_COLOR = (196, 229, 56)
@@ -52,12 +54,11 @@ class MineFish():
         self.target_image = cv2.cvtColor(target_image_raw, cv2.COLOR_BGR2GRAY)
 
     def select_matched_window(self) -> None:
-        windows = pygetwindow.getAllWindows()
-
         self.game_window = None
-        for window in windows:
+        for window in pygetwindow.getAllWindows():
             if self._match_text(window.title, MATCH_LIST):
                 self.game_window = window
+                break
 
     def detect(self) -> tuple():
         left, top, width, height = self._get_window_size(self.game_window)
@@ -88,8 +89,8 @@ class MineFish():
         return left, top, width, height
 
     def _get_capture_points(self, left: int, top: int, width: int, height: int) -> tuple(tuple()):
-        p1 = (left + int(width/2), top + int(height/5*3))
-        p2 = (int(width/2), int(height/5*2))
+        p1 = (left + int(width / 2), top + int(height / 5 * 3))
+        p2 = (int(width / 2), int(height / 5 * 2))
         return p1, p2
 
     def _capture_area(self, p1: tuple, p2: tuple) -> tuple():
