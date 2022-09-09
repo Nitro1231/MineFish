@@ -17,9 +17,7 @@
 
 
 import os
-import sys
-import json
-import minefish
+import event
 import pyautogui
 import webbrowser
 import pygetwindow
@@ -27,7 +25,6 @@ from shutil import copyfile
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QImage, QPixmap, QIcon
 from PyQt6.QtWidgets import (
-    QApplication,
     QHBoxLayout,
     QLabel,
     QWidget,
@@ -38,7 +35,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QSlider,
-    QFileDialog
+    QFileDialog,
 )
 from qt_material import apply_stylesheet
 
@@ -62,31 +59,27 @@ INITIAL_SETTING = {
 
 
 class MineFishGUI(QWidget):
-    def __init__(self) -> None:
+    def __init__(self, minefish) -> None:
         super().__init__()
-        self.minefish = minefish.MineFish()
-
+        self.minefish = minefish
         self.initialize_ui()
         self.set_preview_active()
-        self.load_resources()
-        self.load_language()
 
+        event.Event().link(self.load_resources)
+        event.Event().link(self.load_language)
+        event.Event().call()
+        
         self.search_window()
         self.show()
 
 # region Initialize UI
-
     def initialize_ui(self) -> None:
         apply_stylesheet(self, theme='dark_lightgreen.xml')
 
-        preview_tab = self.initialize_preview_tab()
-        setting_tab = self.initialize_setting_tab()
-        about_tab = self.initialize_about_tab()
-
         self.main_tabs = QTabWidget()
-        self.main_tabs.addTab(preview_tab, 'preview')
-        self.main_tabs.addTab(setting_tab, 'setting')
-        self.main_tabs.addTab(about_tab, 'about')
+        self.main_tabs.addTab(self.initialize_preview_tab(), 'preview')
+        self.main_tabs.addTab(self.initialize_setting_tab(), 'setting')
+        self.main_tabs.addTab(self.initialize_about_tab(), 'about')
 
         box_layout = QVBoxLayout()
         box_layout.addWidget(self.main_tabs)
@@ -97,7 +90,6 @@ class MineFishGUI(QWidget):
         self.setGeometry(300, 300, WIDTH, HEIGHT)
 
     # region Initialize Preview Tab
-
     def initialize_preview_tab(self) -> QWidget:
         preview_tab = QWidget()
 
@@ -141,11 +133,9 @@ class MineFishGUI(QWidget):
         self.capture_label.setVisible(state)
         self.capture_image.setVisible(state)
         self.capturing_label.setVisible(not state)
-
     # endregion
 
     # region Initialize Setting Tab
-
     def initialize_setting_tab(self) -> QWidget:
         setting_tab = QWidget()
 
@@ -330,8 +320,9 @@ class MineFishGUI(QWidget):
         self.minefish.setting['image'] = self.target_image_list.currentText()
         self.minefish.setting['display_language'] = self.language_list.currentText()
         self.minefish.save_setting()
-        self.load_resources()
-        self.load_language()
+        # self.load_resources()
+        # self.load_language()
+        event.Event().call()
 
     def target_image_add_file_dialog(self) -> None:
         new_image_path = QFileDialog.getOpenFileName(self, 'Add File', './')[0]
@@ -341,11 +332,9 @@ class MineFishGUI(QWidget):
 
     def target_image_open_folder(self) -> None:
         os.startfile(IMAGE_PATH)
-
     # endregion
 
     # region Initialize About Tab
-
     def initialize_about_tab(self) -> QWidget:
         about_tab = QWidget()
 
@@ -362,9 +351,9 @@ class MineFishGUI(QWidget):
         gitHub_layout = self.create_clickable_label('GitHub:', 'https://github.com/Nitro1231/MineFish', 'https://github.com/Nitro1231/MineFish')
         version_layout = self.create_clickable_label('Version:', VERSION, 'https://github.com/Nitro1231/MineFish/releases')
 
-        self.update_state_label = QLabel('Checking for a new update...')
+        self.update_state_label = QLabel('update_state_label')
 
-        self.text_label = QLabel('Thank you for using MineFish. You are always welcome to give us any feedback or share amazing ideas about MineFish. Feel free to join my Discord Server! Thank you :)')
+        self.text_label = QLabel('text_label')
         self.text_label.setWordWrap(True)
 
         box_layout = QVBoxLayout()
@@ -398,13 +387,10 @@ class MineFishGUI(QWidget):
         box_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         return box_layout
-
     # endregion
-
 # endregion
 
 # region Timer
-
     def search_window(self) -> None:
         self.set_preview_visibility(False)
         self.search_window_timer = self.make_timer(500, self.search_window_timer_event)
@@ -458,13 +444,11 @@ class MineFishGUI(QWidget):
         timer.setInterval(interval)
         timer.timeout.connect(event)
         return timer
-
 # endregion
 
 # region Extra Functionalities
-
     def load_resources(self) -> None:
-        self.minefish.load_setting()
+        # self.minefish.load_setting()
         self.minefish.load_target_image()
         self.target_pixmap = QPixmap(self.minefish.setting['image'])
         self.target_image.setPixmap(self.target_pixmap)
@@ -482,8 +466,9 @@ class MineFishGUI(QWidget):
         self.max_scale_bar.setValue(int(self.minefish.setting['max_scale'] * 100))
 
     def load_language(self) -> None:
-        with open(self.minefish.setting['display_language'], 'r', encoding='utf-8') as f:
-            lang = json.load(f)
+        # with open(self.minefish.setting['display_language'], 'r', encoding='utf-8') as f:
+        #     lang = json.load(f)
+        lang = self.minefish.lang
 
         # main_tabs
         self.main_tabs.setTabText(0, lang['tabs']['preview'])
@@ -545,44 +530,4 @@ class MineFishGUI(QWidget):
             bytesPerLine, QImage.Format.Format_RGB888
         )
         return QPixmap.fromImage(qimg)
-
 # endregion
-
-
-class UpdateGUI(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initialize_ui()
-        self.show()
-    
-    def initialize_ui(self) -> None:
-        apply_stylesheet(self, theme='dark_lightgreen.xml')
-
-        update_label = QLabel('Update Available')
-        update_label.setStyleSheet('font-size: 18pt; font-weight: bold; color: #8bc34a')
-        version_label = QLabel('Version: 4.0.1')
-        release_date_label = QLabel('Release Date: 2022/09/08')
-        url_label = QLabel('https://github.com/Nitro1231/MineFish/releases')
-        description_label = QLabel('description')
-
-        box_layout = QVBoxLayout()
-        box_layout.addWidget(update_label)
-        box_layout.addWidget(version_label)
-        box_layout.addWidget(release_date_label)
-        box_layout.addWidget(url_label)
-        box_layout.addWidget(description_label)
-        box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        self.setLayout(box_layout)
-        self.setWindowTitle('MineFish')
-        self.setWindowIcon(QIcon(ICON_PATH))
-
-
-
-if __name__ == '__main__':
-    # try:
-    app = QApplication(sys.argv)
-    ex = MineFishGUI()
-    ex1 = UpdateGUI()
-    sys.exit(app.exec())
-    # except Exception as e:

@@ -38,8 +38,10 @@ class MineFish():
     def __init__(self) -> None:
         self.setting = None
         self.game_window = None
+        self.lang = None
         self.load_setting()
         self.load_target_image()
+        self.load_language()
 
     def load_setting(self) -> None:
         with open(SETTING_PATH, 'r', encoding='utf-8') as f:
@@ -48,6 +50,10 @@ class MineFish():
     def save_setting(self) -> None:
         with open(SETTING_PATH, 'w', encoding='utf-8') as f:
             json.dump(self.setting, f, indent='\t')
+
+    def load_language(self) -> dict:
+        with open(self.setting['display_language'], 'r', encoding='utf-8') as f:
+            self.lang = json.load(f)
 
     def load_target_image(self) -> None:
         target_image_raw = cv2.imread(self.setting['image'])
