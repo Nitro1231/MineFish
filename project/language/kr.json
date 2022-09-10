@@ -37,18 +37,13 @@
         "max_scale_title": "최대 타겟 이미지 사이즈"
     },
     "about_tab": {
-        "update_state_label": {
-            "newest": "최신 버전 입니다.",
-            "available": "새로운 업데이트가 있습니다.", 
-            "checking": "새 업데이트를 확인하는 중 입니다...",
-            "failed": "업데이트 확인에 실패했습니다."
-        },
         "text_label": "MineFish를 이용해 주셔서 감사합니다. 사용에 불편한 점이 있거나, 새로운 아이디어가 있다면 디스코드 서버에 가입하여 공유해주세요! 감사합니다 :)"
     },
     "update_window": {
         "update_label": "최신 버전 업데이트",
         "version_label": "버전: ",
         "release_date_label": "출시일: ",
-        "description_label": "설명: "
+        "description_label": "설명: ",
+        "open_button": "열기"
     }
 }

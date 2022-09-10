@@ -37,18 +37,13 @@
         "max_scale_title": "Target Image Max Scale"
     },
     "about_tab": {
-        "update_state_label": {
-            "newest": "You're up to date.",
-            "available": "A new update is available.", 
-            "checking": "Checking for the new update...",
-            "failed": "Update check failed."
-        },
         "text_label": "Thank you for using MineFish. You are always welcome to give us any feedback or share amazing ideas about MineFish. Feel free to join my Discord Server! Thank you :)"
     },
     "update_window": {
         "update_label": "Update Available",
         "version_label": "Version: ",
         "release_date_label": "Release Date: ",
-        "description_label": "Description: "
+        "description_label": "Description: ",
+        "open_button": "Open"
     }
 }

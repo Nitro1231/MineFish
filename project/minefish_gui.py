@@ -8,7 +8,7 @@
 # GitHub: https://github.com/Nitro1231/MineFish
 #
 # Version: 4.0.0
-# Last Modified: Thursday, December 30, 2021 at 12:54 AM. (KST)
+# Last Modified: Saturday, September 10, 2022, at 7:23 PM. (KST)
 #
 # This project is licensed under the GNU Affero General Public License v3.0;
 # you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QSlider,
     QFileDialog,
+    QPlainTextEdit
 )
 from qt_material import apply_stylesheet
 
@@ -80,6 +81,7 @@ class MineFishGUI(QWidget):
         self.main_tabs.addTab(self.initialize_preview_tab(), 'preview')
         self.main_tabs.addTab(self.initialize_setting_tab(), 'setting')
         self.main_tabs.addTab(self.initialize_about_tab(), 'about')
+        # self.main_tabs.addTab(self.initialize_debug_tab(), 'Debug')
 
         box_layout = QVBoxLayout()
         box_layout.addWidget(self.main_tabs)
@@ -351,8 +353,6 @@ class MineFishGUI(QWidget):
         gitHub_layout = self.create_clickable_label('GitHub:', 'https://github.com/Nitro1231/MineFish', 'https://github.com/Nitro1231/MineFish')
         version_layout = self.create_clickable_label('Version:', VERSION, 'https://github.com/Nitro1231/MineFish/releases')
 
-        self.update_state_label = QLabel('update_state_label')
-
         self.text_label = QLabel('text_label')
         self.text_label.setWordWrap(True)
 
@@ -364,7 +364,6 @@ class MineFishGUI(QWidget):
         box_layout.addLayout(discord_layout)
         box_layout.addLayout(gitHub_layout)
         box_layout.addLayout(version_layout)
-        box_layout.addWidget(self.update_state_label)
         box_layout.addWidget(self.text_label)
         box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         about_tab.setLayout(box_layout)
@@ -387,6 +386,19 @@ class MineFishGUI(QWidget):
         box_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         return box_layout
+    # endregion
+
+    # region Initialize Debug Tab
+    def initialize_debug_tab(self) -> QWidget:
+        debug_tab = QWidget()
+
+        self.textedit_box = QPlainTextEdit('')
+
+        box_layout = QVBoxLayout()
+        box_layout.addWidget(self.textedit_box)
+        debug_tab.setLayout(box_layout)
+
+        return debug_tab
     # endregion
 # endregion
 
@@ -500,7 +512,6 @@ class MineFishGUI(QWidget):
         self.max_scale_title.setText(lang['setting_tab']['max_scale_title'])
 
         # about_tab
-        self.update_state_label.setText(lang['about_tab']['update_state_label']['checking'])
         self.text_label.setText(lang['about_tab']['text_label'])
 
     def set_combobox_item(self, combobox: QComboBox, text: str) -> None:
