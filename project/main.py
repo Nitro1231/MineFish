@@ -23,6 +23,9 @@ import minefish_gui
 from PyQt6.QtWidgets import QApplication
 
 
+VERSION = '4.0.0'
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
@@ -33,7 +36,7 @@ if __name__ == '__main__':
     minefish_gui = minefish_gui.MineFishGUI(minefish)
 
     update_status, update_info = update.check_update()
-    if update_status == True:
+    if update_status == True and VERSION != update_info['version']:
         update_gui = update_gui.UpdateGUI(minefish, update_info)
 
     sys.exit(app.exec())

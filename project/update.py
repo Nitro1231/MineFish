@@ -17,7 +17,6 @@
 import requests
 
 
-VERSION = '4.0.0'
 URL = 'https://nitro1231.github.io/Database/Update/V0/MineFish/Update.json'
 
 

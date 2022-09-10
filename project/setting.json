@@ -1,5 +1,5 @@
 {
-	"image": ".\\image\\kr.png",
+	"image": ".\\image\\en.png",
 	"display_language": ".\\language\\en.json",
 	"accuracy": 0.7,
 	"detection_delay": 0.3,
